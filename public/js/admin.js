@@ -12,15 +12,21 @@ let cotizacionesData = [];
 let editandoCotizacion = false;
 let cotizacionEditandoId = null;
 
+// Variables para configuración bancaria
+let cuentasBancariasData = [];
+let editandoBanco = false;
+
 document.addEventListener('DOMContentLoaded', function() {
     // Cargar datos iniciales
     cargarProductos();
     cargarClientes();
     cargarCotizaciones();
+    cargarCuentasBancarias();
 
     // Inicializar cotización
     inicializarCotizacion();
     inicializarListaCotizaciones();
+    inicializarConfiguracionBancaria();
 
     // Buscadores productos y clientes (tabs originales)
     document.getElementById('buscarProducto').addEventListener('input', function() {
@@ -561,6 +567,13 @@ function calcularTotalCotizacion() {
     document.getElementById('totalAPagar').textContent = `S/ ${total.toFixed(2)}`;
     document.getElementById('totalPorFacturar').textContent = `S/ ${total.toFixed(2)}`;
     calcularSaldo();
+    
+    // Mostrar información bancaria si hay items
+    if (itemsCotizacion.length > 0) {
+        mostrarInfoBancaria();
+    } else {
+        document.getElementById('infoBancaria').style.display = 'none';
+    }
 }
 
 function calcularSaldo() {
@@ -712,24 +725,24 @@ function mostrarCotizaciones(cotizaciones) {
     cotizaciones.forEach(cotizacion => {
         const fila = document.createElement('tr');
         fila.innerHTML = `
-            <td><strong>#${cotizacion.id}</strong></td>
+            <td class="text-center"><strong>#${cotizacion.id}</strong></td>
             <td>
                 <strong>${cotizacion.razon_social}</strong><br>
                 <small class="text-muted">${cotizacion.dni_ruc}</small>
             </td>
-            <td><strong>S/ ${parseFloat(cotizacion.total).toFixed(2)}</strong></td>
-            <td>S/ ${parseFloat(cotizacion.abono).toFixed(2)}</td>
-            <td>S/ ${parseFloat(cotizacion.saldo).toFixed(2)}</td>
-            <td>
+            <td class="text-center"><strong>S/ ${parseFloat(cotizacion.total).toFixed(2)}</strong></td>
+            <td class="text-center">S/ ${parseFloat(cotizacion.abono).toFixed(2)}</td>
+            <td class="text-center">S/ ${parseFloat(cotizacion.saldo).toFixed(2)}</td>
+            <td class="text-center">
                 <span class="badge bg-${getEstadoColor(cotizacion.estado)}">
                     ${cotizacion.estado.toUpperCase()}
                 </span>
             </td>
-            <td>
+            <td class="text-center">
                 <small>${new Date(cotizacion.created_at).toLocaleDateString()}</small><br>
                 <small class="text-muted">${new Date(cotizacion.created_at).toLocaleTimeString()}</small>
             </td>
-                            <td>
+                            <td class="text-center">
                                 <div class="btn-group btn-group-sm">
                                     <button class="btn btn-info" onclick="verDetalleCotizacion(${cotizacion.id})" title="Ver detalle">
                                         <i class="fas fa-eye"></i>
@@ -922,6 +935,234 @@ async function cambiarEstado(id, nuevoEstado) {
     } catch (error) {
         console.error('Error:', error);
         alert('Error al cambiar estado');
+    }
+}
+
+// ===== FUNCIONES DE CONFIGURACIÓN BANCARIA =====
+
+function inicializarConfiguracionBancaria() {
+    // Botón cancelar banco
+    document.getElementById('btnCancelarBanco').addEventListener('click', function() {
+        cancelarEdicionBanco();
+    });
+
+    // Formulario de banco
+    document.getElementById('formBanco').addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const data = Object.fromEntries(formData);
+        
+        try {
+            let response;
+            if (editandoBanco) {
+                response = await fetch(`/configuracion-bancaria/${data.id}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+            } else {
+                response = await fetch('/configuracion-bancaria', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+            }
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(result.message);
+                this.reset();
+                cancelarEdicionBanco();
+                cargarCuentasBancarias();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al procesar cuenta bancaria');
+        }
+    });
+}
+
+async function cargarCuentasBancarias() {
+    try {
+        const response = await fetch('/configuracion-bancaria');
+        cuentasBancariasData = await response.json();
+        mostrarCuentasBancarias(cuentasBancariasData);
+    } catch (error) {
+        console.error('Error cargando cuentas bancarias:', error);
+    }
+}
+
+function mostrarCuentasBancarias(cuentas) {
+    const lista = document.getElementById('listaCuentasBancarias');
+    lista.innerHTML = '';
+    
+    if (cuentas.length === 0) {
+        lista.innerHTML = '<p class="text-muted">No hay cuentas bancarias registradas</p>';
+        return;
+    }
+    
+    cuentas.forEach(cuenta => {
+        const item = document.createElement('div');
+        item.className = 'lista-item mb-3';
+        const estadoBadge = cuenta.activo ? 
+            '<span class="badge bg-success">Activa</span>' : 
+            '<span class="badge bg-secondary">Inactiva</span>';
+        
+        item.innerHTML = `
+            <div class="item-content">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <strong>${cuenta.banco}</strong> ${estadoBadge}<br>
+                        <span class="text-muted">Tipo: ${cuenta.tipo_cuenta === 'ahorros' ? 'Ahorros' : 'Corriente'}</span><br>
+                        <span class="text-muted">Cuenta: ${cuenta.numero_cuenta}</span><br>
+                        ${cuenta.cci ? `<span class="text-muted">CCI: ${cuenta.cci}</span><br>` : ''}
+                        <span class="text-muted">Titular: ${cuenta.titular}</span>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-warning btn-sm" onclick="editarBanco(${cuenta.id})">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="btn ${cuenta.activo ? 'btn-secondary' : 'btn-success'} btn-sm" 
+                                onclick="toggleEstadoBanco(${cuenta.id}, ${!cuenta.activo})">
+                            <i class="fas fa-${cuenta.activo ? 'eye-slash' : 'eye'}"></i>
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="eliminarBanco(${cuenta.id})">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        lista.appendChild(item);
+    });
+}
+
+function editarBanco(id) {
+    const cuenta = cuentasBancariasData.find(c => c.id === id);
+    if (cuenta) {
+        document.getElementById('bancoId').value = cuenta.id;
+        document.getElementById('nombreBanco').value = cuenta.banco;
+        document.getElementById('tipoCuenta').value = cuenta.tipo_cuenta;
+        document.getElementById('numeroCuenta').value = cuenta.numero_cuenta;
+        document.getElementById('cci').value = cuenta.cci || '';
+        document.getElementById('titular').value = cuenta.titular;
+        document.getElementById('tituloFormBanco').textContent = 'Editar Cuenta Bancaria';
+        document.getElementById('btnBanco').textContent = 'Actualizar Cuenta';
+        document.getElementById('btnCancelarBanco').style.display = 'inline-block';
+        editandoBanco = true;
+    }
+}
+
+function cancelarEdicionBanco() {
+    document.getElementById('formBanco').reset();
+    document.getElementById('tituloFormBanco').textContent = 'Agregar Cuenta Bancaria';
+    document.getElementById('btnBanco').textContent = 'Agregar Cuenta';
+    document.getElementById('btnCancelarBanco').style.display = 'none';
+    editandoBanco = false;
+}
+
+async function toggleEstadoBanco(id, nuevoEstado) {
+    try {
+        const response = await fetch(`/configuracion-bancaria/${id}/estado`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ activo: nuevoEstado })
+        });
+        
+        const result = await response.json();
+        
+        if (result.success) {
+            cargarCuentasBancarias();
+        } else {
+            alert('Error al cambiar estado: ' + result.message);
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('Error al cambiar estado de la cuenta');
+    }
+}
+
+async function eliminarBanco(id) {
+    if (confirm('¿Estás seguro de que deseas eliminar esta cuenta bancaria?')) {
+        try {
+            const response = await fetch(`/configuracion-bancaria/${id}`, {
+                method: 'DELETE'
+            });
+            
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(result.message);
+                cargarCuentasBancarias();
+            } else {
+                alert('Error: ' + result.message);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al eliminar cuenta bancaria');
+        }
+    }
+}
+
+// Función para mostrar información bancaria en cotización
+async function mostrarInfoBancaria() {
+    try {
+        const response = await fetch('/configuracion-bancaria');
+        const cuentas = await response.json();
+        
+        const cuentasActivas = cuentas.filter(cuenta => cuenta.activo);
+        const infoContainer = document.getElementById('cuentasBancariasInfo');
+        
+        if (cuentasActivas.length === 0) {
+            infoContainer.innerHTML = '<p class="text-muted small">No hay cuentas bancarias configuradas</p>';
+        } else {
+            let html = '';
+            cuentasActivas.forEach(cuenta => {
+                html += `
+                    <div class="border rounded p-2 mb-2 bg-light">
+                        <div class="row">
+                            <div class="col-12">
+                                <strong class="text-primary">${cuenta.banco}</strong>
+                                <span class="badge bg-info ms-2">${cuenta.tipo_cuenta === 'ahorros' ? 'Ahorros' : 'Corriente'}</span>
+                            </div>
+                        </div>
+                        <div class="row mt-1">
+                            <div class="col-6">
+                                <small class="text-muted">Número de Cuenta:</small><br>
+                                <strong>${cuenta.numero_cuenta}</strong>
+                            </div>
+                            ${cuenta.cci ? `
+                            <div class="col-6">
+                                <small class="text-muted">CCI:</small><br>
+                                <strong>${cuenta.cci}</strong>
+                            </div>
+                            ` : ''}
+                        </div>
+                        <div class="row mt-1">
+                            <div class="col-12">
+                                <small class="text-muted">Titular:</small><br>
+                                <strong>${cuenta.titular}</strong>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            infoContainer.innerHTML = html;
+        }
+        
+        document.getElementById('infoBancaria').style.display = 'block';
+    } catch (error) {
+        console.error('Error cargando información bancaria:', error);
     }
 }
 

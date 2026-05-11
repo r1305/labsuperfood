@@ -239,13 +239,19 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
       WHERE dc.cotizacion_id = ?
     `, [id]);
     
+    // Obtener cuentas bancarias activas
+    const [cuentasBancarias] = await connection.execute(`
+      SELECT * FROM configuracion_bancaria WHERE activo = TRUE ORDER BY created_at ASC
+    `);
+    
     await connection.end();
     
     // Renderizar HTML
     const html = await new Promise((resolve, reject) => {
       res.app.render('cotizacion-pdf', {
         cotizacion: cotizacion[0],
-        detalles: detalles
+        detalles: detalles,
+        cuentasBancarias: cuentasBancarias
       }, (err, html) => {
         if (err) reject(err);
         else resolve(html);
@@ -302,6 +308,90 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
     }
     
     res.status(500).json({ success: false, message: 'Error al generar PDF: ' + error.message });
+  }
+});
+
+// Rutas para configuración bancaria
+app.post('/configuracion-bancaria', async (req, res) => {
+  try {
+    const { banco, tipo_cuenta, numero_cuenta, cci, titular } = req.body;
+    const connection = await createConnection();
+    
+    await connection.execute(
+      'INSERT INTO configuracion_bancaria (banco, tipo_cuenta, numero_cuenta, cci, titular) VALUES (?, ?, ?, ?, ?)',
+      [banco, tipo_cuenta, numero_cuenta, cci || null, titular]
+    );
+    
+    await connection.end();
+    res.json({ success: true, message: 'Cuenta bancaria agregada correctamente' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.json({ success: false, message: 'Error al agregar cuenta bancaria' });
+  }
+});
+
+app.get('/configuracion-bancaria', async (req, res) => {
+  try {
+    const connection = await createConnection();
+    const [cuentas] = await connection.execute('SELECT * FROM configuracion_bancaria ORDER BY created_at DESC');
+    await connection.end();
+    res.json(cuentas);
+  } catch (error) {
+    console.error('Error:', error);
+    res.json([]);
+  }
+});
+
+app.put('/configuracion-bancaria/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { banco, tipo_cuenta, numero_cuenta, cci, titular } = req.body;
+    const connection = await createConnection();
+    
+    await connection.execute(
+      'UPDATE configuracion_bancaria SET banco = ?, tipo_cuenta = ?, numero_cuenta = ?, cci = ?, titular = ? WHERE id = ?',
+      [banco, tipo_cuenta, numero_cuenta, cci || null, titular, id]
+    );
+    
+    await connection.end();
+    res.json({ success: true, message: 'Cuenta bancaria actualizada correctamente' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.json({ success: false, message: 'Error al actualizar cuenta bancaria' });
+  }
+});
+
+app.put('/configuracion-bancaria/:id/estado', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { activo } = req.body;
+    const connection = await createConnection();
+    
+    await connection.execute(
+      'UPDATE configuracion_bancaria SET activo = ? WHERE id = ?',
+      [activo, id]
+    );
+    
+    await connection.end();
+    res.json({ success: true, message: 'Estado actualizado correctamente' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.json({ success: false, message: 'Error al actualizar estado' });
+  }
+});
+
+app.delete('/configuracion-bancaria/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const connection = await createConnection();
+    
+    await connection.execute('DELETE FROM configuracion_bancaria WHERE id = ?', [id]);
+    
+    await connection.end();
+    res.json({ success: true, message: 'Cuenta bancaria eliminada correctamente' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.json({ success: false, message: 'Error al eliminar cuenta bancaria' });
   }
 });
 

@@ -5,68 +5,72 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cotización #<%= cotizacion.id %></title>
     <style>
+        @page {
+            margin: 10mm; /* Márgenes de página reducidos a la mitad */
+        }
         body {
             font-family: Arial, sans-serif;
             margin: 0;
-            padding: 20px;
+            padding: 15px;
             color: #333;
-            font-size: 12px;
+            font-size: 10px;
         }
         .header {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
             border-bottom: 2px solid #007bff;
-            padding-bottom: 20px;
+            padding-bottom: 15px;
         }
         .company-name {
-            font-size: 28px;
+            font-size: 22px;
             font-weight: bold;
             color: #007bff;
-            margin-bottom: 5px;
+            margin-bottom: 3px;
         }
         .document-title {
-            font-size: 24px;
-            margin: 10px 0;
+            font-size: 18px;
+            margin: 8px 0;
         }
         .cotizacion-info {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 30px;
+            margin-bottom: 20px;
         }
         .cliente-info, .cotizacion-details {
             width: 48%;
         }
         .info-box {
             border: 1px solid #ddd;
-            padding: 15px;
+            padding: 10px;
             border-radius: 5px;
             background-color: #f9f9f9;
         }
         .info-title {
             font-weight: bold;
-            font-size: 16px;
-            margin-bottom: 10px;
+            font-size: 12px;
+            margin-bottom: 8px;
             color: #007bff;
         }
         .info-line {
-            margin-bottom: 4px;
-            font-size: 12px;
+            margin-bottom: 3px;
+            font-size: 10px;
         }
         .productos-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 20px 0;
+            margin: 15px 0;
             table-layout: fixed;
         }
         .productos-table th,
         .productos-table td {
             border: 1px solid #ddd;
-            padding: 6px;
+            padding: 4px;
             text-align: left;
-            font-size: 12px;
+            font-size: 9px;
             white-space: normal;
             word-wrap: break-word;
             vertical-align: top;
+            line-height: 1.1;
         }
         .productos-table th {
             background-color: #007bff;
@@ -83,31 +87,41 @@
             text-align: center;
         }
         .totales {
-            margin-top: 20px;
+            margin-top: 15px;
             float: right;
-            width: 300px;
+            width: 280px;
         }
         .totales-table {
             width: 100%;
             border-collapse: collapse;
         }
         .totales-table td {
-            padding: 6px;
+            padding: 4px;
             border-bottom: 1px solid #ddd;
-            font-size: 12px;
+            font-size: 10px;
         }
         .totales-table .total-row {
             font-weight: bold;
-            font-size: 18px;
+            font-size: 12px;
             background-color: #007bff;
             color: white;
         }
         .footer {
-            margin-top: 50px;
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
             text-align: center;
-            font-size: 10px;
+            font-size: 8px;
             color: #666;
             clear: both;
+            padding: 10px 20px;
+            background-color: white;
+            box-sizing: border-box;
+        }
+        .main-content {
+            margin-bottom: 180px;
         }
         .estado-badge {
             display: inline-block;
@@ -132,8 +146,10 @@
     </style>
 </head>
 <body>
+    <div class="main-content">
     <div class="header">
-        <div class="company-name">LabSuperFood</div>
+        <div class="company-name">Maquila Lima Lab</div>
+        <div style="font-size: 12px; color: #666; margin-bottom: 3px;">RUC 20607583677</div>
         <div class="document-title">COTIZACIÓN</div>
         <div>N° <%= cotizacion.id.toString().padStart(6, '0') %></div>
     </div>
@@ -169,20 +185,20 @@
         <thead>
             <tr>
                 <th style="width: 35%;">PRODUCTO</th>
-                <th class="text-center" style="width: 13%;">CANTIDAD</th>
-                <th class="text-right" style="width: 13%;">PRECIO UNIT.</th>
-                <th class="text-right" style="width: 13%;">TOTAL</th>
-                <th class="text-right" style="width: 13%;">POR FACTURAR</th>
+                <th style="width: 13%; text-align: center;">CANTIDAD</th>
+                <th style="width: 13%; text-align: center;">PRECIO UNIT.</th>
+                <th style="width: 13%; text-align: center;">TOTAL</th>
+                <th style="width: 13%; text-align: center;">POR FACTURAR</th>
             </tr>
         </thead>
         <tbody>
             <% detalles.forEach(detalle => { %>
             <tr>
-                <td style="width: 35%; line-height: 1.2; max-height: 2.4em; overflow: hidden;"><%= detalle.producto_nombre %></td>
-                <td class="text-center" style="width: 13%;"><%= detalle.cantidad %></td>
-                <td class="text-right" style="width: 13%;">S/ <%= parseFloat(detalle.precio_unitario).toFixed(2) %></td>
-                <td class="text-right" style="width: 13%;">S/ <%= parseFloat(detalle.total).toFixed(2) %></td>
-                <td class="text-right" style="width: 13%;">S/ <%= parseFloat(detalle.total).toFixed(2) %></td>
+                <td style="width: 35%; line-height: 1.1; max-height: 2.2em; overflow: hidden;"><%= detalle.producto_nombre %></td>
+                <td style="width: 13%; text-align: center;"><%= detalle.cantidad %></td>
+                <td style="width: 13%; text-align: center;">S/ <%= parseFloat(detalle.precio_unitario).toFixed(2) %></td>
+                <td style="width: 13%; text-align: center;">S/ <%= parseFloat(detalle.total).toFixed(2) %></td>
+                <td style="width: 13%; text-align: center;">S/ <%= parseFloat(detalle.total).toFixed(2) %></td>
             </tr>
             <% }); %>
         </tbody>
@@ -209,9 +225,41 @@
         </table>
     </div>
 
+
+
+    </div>
+
     <div class="footer">
-        <p>Gracias por su preferencia - LabSuperFood</p>
-        <p>Documento generado el <%= new Date().toLocaleString('es-PE') %></p>
+        <!-- Información Bancaria -->
+        <% 
+        // Obtener cuentas bancarias activas (esto se pasará desde el servidor)
+        if (typeof cuentasBancarias !== 'undefined' && cuentasBancarias.length > 0) {
+        %>
+        <div style="margin-bottom: 10px; page-break-inside: avoid; text-align: left;">
+            <h6 style="color: #007bff; margin-bottom: 8px; font-size: 11px; text-align: left;">INFORMACIÓN PARA DEPÓSITO</h6>
+            <% cuentasBancarias.forEach(cuenta => { %>
+            <div style="border: 1px solid #ddd; border-radius: 3px; padding: 6px; margin-bottom: 6px; background-color: #f9f9f9; display: inline-block; width: 48%; margin-right: 1%; vertical-align: top;">
+                <div style="margin-bottom: 3px;">
+                    <strong style="color: #007bff; font-size: 9px;"><%= cuenta.banco %></strong>
+                    <span style="background-color: #17a2b8; color: white; padding: 1px 3px; border-radius: 2px; font-size: 7px; margin-left: 5px;">
+                        <%= cuenta.tipo_cuenta === 'ahorros' ? 'AHORROS' : 'CORRIENTE' %>
+                    </span>
+                </div>
+                <div style="font-size: 8px; margin-bottom: 1px;">
+                    <span style="color: #666;">Número de Cuenta:</span> <strong><%= cuenta.numero_cuenta %></strong>
+                </div>
+                <% if (cuenta.cci) { %>
+                <div style="font-size: 8px; margin-bottom: 1px;">
+                    <span style="color: #666;">CCI:</span> <strong><%= cuenta.cci %></strong>
+                </div>
+                <% } %>
+                <div style="font-size: 8px;">
+                    <span style="color: #666;">Titular:</span> <strong><%= cuenta.titular %></strong>
+                </div>
+            </div>
+            <% }); %>
+        </div>
+        <% } %>
     </div>
 </body>
 </html>

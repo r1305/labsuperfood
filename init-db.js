@@ -65,6 +65,22 @@ async function inicializarBaseDatos() {
     `);
     console.log('✅ Tabla detalle_cotizaciones creada');
 
+    // Crear tabla configuracion_bancaria
+    console.log('Creando tabla configuracion_bancaria...');
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS configuracion_bancaria (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        banco VARCHAR(100) NOT NULL,
+        tipo_cuenta ENUM('ahorros', 'corriente') NOT NULL,
+        numero_cuenta VARCHAR(50) NOT NULL,
+        cci VARCHAR(50),
+        titular VARCHAR(255) NOT NULL,
+        activo BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('✅ Tabla configuracion_bancaria creada');
+
     // Verificar que las tablas existen
     console.log('Verificando tablas...');
     const [tables] = await connection.execute('SHOW TABLES');

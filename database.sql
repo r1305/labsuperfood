@@ -40,3 +40,15 @@ CREATE TABLE IF NOT EXISTS detalle_cotizaciones (
     FOREIGN KEY (cotizacion_id) REFERENCES cotizaciones(id) ON DELETE CASCADE,
     FOREIGN KEY (producto_id) REFERENCES productos(id)
 );
+
+-- Crear tabla configuracion_bancaria
+CREATE TABLE IF NOT EXISTS configuracion_bancaria (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    banco VARCHAR(100) NOT NULL,
+    tipo_cuenta ENUM('ahorros', 'corriente') NOT NULL,
+    numero_cuenta VARCHAR(50) NOT NULL,
+    cci VARCHAR(50),
+    titular VARCHAR(255) NOT NULL,
+    activo BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);

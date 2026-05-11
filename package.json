@@ -2,8 +2,12 @@
   "name": "cotizaciones-labsuperfood",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
+  "main": "app.js",
   "scripts": {
+    "start": "node app.js",
+    "dev": "nodemon app.js",
+    "watch": "nodemon app.js",
+    "init-db": "node init-db.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,6 +16,12 @@
   "type": "commonjs",
   "dependencies": {
     "dotenv": "^17.4.2",
-    "mysql2": "^3.22.3"
+    "ejs": "^5.0.2",
+    "express": "^5.2.1",
+    "mysql2": "^3.22.3",
+    "puppeteer": "^24.43.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
   }
 }

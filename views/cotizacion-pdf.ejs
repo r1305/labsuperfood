@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cotización #<%= cotizacion.id %></title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            color: #333;
+            font-size: 12px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #007bff;
+            padding-bottom: 20px;
+        }
+        .company-name {
+            font-size: 28px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        .document-title {
+            font-size: 24px;
+            margin: 10px 0;
+        }
+        .cotizacion-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+        .cliente-info, .cotizacion-details {
+            width: 48%;
+        }
+        .info-box {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .info-title {
+            font-weight: bold;
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: #007bff;
+        }
+        .info-line {
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+        .productos-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            table-layout: fixed;
+        }
+        .productos-table th,
+        .productos-table td {
+            border: 1px solid #ddd;
+            padding: 6px;
+            text-align: left;
+            font-size: 12px;
+            white-space: normal;
+            word-wrap: break-word;
+            vertical-align: top;
+        }
+        .productos-table th {
+            background-color: #007bff;
+            color: white;
+            font-weight: bold;
+        }
+        .productos-table tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+        .text-right {
+            text-align: right;
+        }
+        .text-center {
+            text-align: center;
+        }
+        .totales {
+            margin-top: 20px;
+            float: right;
+            width: 300px;
+        }
+        .totales-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        .totales-table td {
+            padding: 6px;
+            border-bottom: 1px solid #ddd;
+            font-size: 12px;
+        }
+        .totales-table .total-row {
+            font-weight: bold;
+            font-size: 18px;
+            background-color: #007bff;
+            color: white;
+        }
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+            clear: both;
+        }
+        .estado-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .estado-pendiente {
+            background-color: #ffc107;
+            color: #212529;
+        }
+        .estado-pagado {
+            background-color: #28a745;
+            color: white;
+        }
+        .estado-cancelado {
+            background-color: #dc3545;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="company-name">LabSuperFood</div>
+        <div class="document-title">COTIZACIÓN</div>
+        <div>N° <%= cotizacion.id.toString().padStart(6, '0') %></div>
+    </div>
+
+    <div class="cotizacion-info">
+        <div class="cliente-info">
+            <div class="info-box">
+                <div class="info-title">DATOS DEL CLIENTE</div>
+                <div class="info-line"><strong>Razón Social:</strong> <%= cotizacion.razon_social %></div>
+                <div class="info-line"><strong>DNI/RUC:</strong> <%= cotizacion.dni_ruc %></div>
+                <div class="info-line"><strong>Distrito:</strong> <%= cotizacion.distrito %></div>
+                <div class="info-line"><strong>Dirección:</strong> <%= cotizacion.direccion %></div>
+                <div class="info-line"><strong>Teléfono:</strong> <%= cotizacion.telefono %></div>
+            </div>
+        </div>
+        
+        <div class="cotizacion-details">
+            <div class="info-box">
+                <div class="info-title">INFORMACIÓN DE LA COTIZACIÓN</div>
+                <div class="info-line"><strong>Fecha:</strong> <%= new Date(cotizacion.created_at).toLocaleDateString('es-PE') %></div>
+                <div class="info-line"><strong>Hora:</strong> <%= new Date(cotizacion.created_at).toLocaleTimeString('es-PE') %></div>
+                <div class="info-line">
+                    <strong>Estado:</strong> 
+                    <span class="estado-badge estado-<%= cotizacion.estado %>">
+                        <%= cotizacion.estado %>
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <table class="productos-table">
+        <thead>
+            <tr>
+                <th style="width: 35%;">PRODUCTO</th>
+                <th class="text-center" style="width: 13%;">CANTIDAD</th>
+                <th class="text-right" style="width: 13%;">PRECIO UNIT.</th>
+                <th class="text-right" style="width: 13%;">TOTAL</th>
+                <th class="text-right" style="width: 13%;">POR FACTURAR</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% detalles.forEach(detalle => { %>
+            <tr>
+                <td style="width: 35%; line-height: 1.2; max-height: 2.4em; overflow: hidden;"><%= detalle.producto_nombre %></td>
+                <td class="text-center" style="width: 13%;"><%= detalle.cantidad %></td>
+                <td class="text-right" style="width: 13%;">S/ <%= parseFloat(detalle.precio_unitario).toFixed(2) %></td>
+                <td class="text-right" style="width: 13%;">S/ <%= parseFloat(detalle.total).toFixed(2) %></td>
+                <td class="text-right" style="width: 13%;">S/ <%= parseFloat(detalle.total).toFixed(2) %></td>
+            </tr>
+            <% }); %>
+        </tbody>
+    </table>
+
+    <div class="totales">
+        <table class="totales-table">
+            <tr>
+                <td><strong>SUBTOTAL:</strong></td>
+                <td class="text-right">S/ <%= parseFloat(cotizacion.total).toFixed(2) %></td>
+            </tr>
+            <tr>
+                <td><strong>POR FACTURAR:</strong></td>
+                <td class="text-right">S/ <%= parseFloat(cotizacion.total).toFixed(2) %></td>
+            </tr>
+            <tr>
+                <td>ABONO:</td>
+                <td class="text-right">S/ <%= parseFloat(cotizacion.abono).toFixed(2) %></td>
+            </tr>
+            <tr class="total-row">
+                <td>SALDO:</td>
+                <td class="text-right">S/ <%= parseFloat(cotizacion.saldo).toFixed(2) %></td>
+            </tr>
+        </table>
+    </div>
+
+    <div class="footer">
+        <p>Gracias por su preferencia - LabSuperFood</p>
+        <p>Documento generado el <%= new Date().toLocaleString('es-PE') %></p>
+    </div>
+</body>
+</html>

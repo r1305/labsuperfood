@@ -404,4 +404,77 @@ body {
     select option {
         padding: 10px;
     }
+    
+    /* Mejoras específicas para selects móviles */
+    .mobile-select {
+        font-size: 16px !important; /* Evita zoom en iOS */
+        border: 2px solid #007bff;
+        border-radius: 8px;
+        background-color: #fff;
+    }
+    
+    .mobile-select option {
+        padding: 12px 8px;
+        font-size: 14px;
+        border-bottom: 1px solid #eee;
+        background-color: #fff;
+    }
+    
+    .mobile-select option:hover,
+    .mobile-select option:focus,
+    .mobile-select option:active {
+        background-color: #007bff !important;
+        color: white !important;
+    }
+    
+    .mobile-select:focus {
+        border-color: #0056b3;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        outline: none;
+    }
+    
+    /* Contenedor alternativo para listas móviles */
+    .mobile-list-container {
+        max-height: 200px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        background-color: #fff;
+        margin-top: 5px;
+    }
+    
+    .mobile-list-item {
+        padding: 12px 15px;
+        border-bottom: 1px solid #eee;
+        cursor: pointer;
+        font-size: 14px;
+        transition: background-color 0.2s;
+    }
+    
+    .mobile-list-item:hover,
+    .mobile-list-item:active {
+        background-color: #007bff;
+        color: white;
+    }
+    
+    .mobile-list-item:last-child {
+        border-bottom: none;
+    }
+    
+    /* Mejorar área táctil de botones */
+    .touch-friendly {
+        min-height: 48px;
+        min-width: 48px;
+        padding: 12px 20px;
+    }
+    
+    /* Evitar zoom en inputs en iOS */
+    input[type="text"],
+    input[type="number"],
+    input[type="email"],
+    input[type="tel"],
+    select,
+    textarea {
+        font-size: 16px !important;
+    }
 }

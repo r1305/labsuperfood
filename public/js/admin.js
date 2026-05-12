@@ -389,9 +389,13 @@ function inicializarCotizacion() {
 
 function buscarClientesCotizacion(termino) {
     const select = document.getElementById('selectCliente');
+    const esMobile = window.innerWidth <= 768;
     
     if (termino.length < 2) {
         select.style.display = 'none';
+        if (esMobile) {
+            ocultarListaMobile('listaClientesMobile');
+        }
         return;
     }
 
@@ -400,19 +404,80 @@ function buscarClientesCotizacion(termino) {
         cliente.dni_ruc.includes(termino)
     );
 
-    select.innerHTML = '';
-    
     if (clientesFiltrados.length > 0) {
-        clientesFiltrados.forEach(cliente => {
-            const option = document.createElement('option');
-            option.value = cliente.id;
-            option.textContent = `${cliente.razon_social} - ${cliente.dni_ruc}`;
-            option.addEventListener('click', () => seleccionarCliente(cliente));
-            select.appendChild(option);
-        });
-        select.style.display = 'block';
+        if (esMobile) {
+            // Usar lista de botones para móviles
+            mostrarListaMobileClientes(clientesFiltrados);
+            select.style.display = 'none';
+        } else {
+            // Usar select tradicional para desktop
+            mostrarSelectClientes(clientesFiltrados, select);
+        }
     } else {
         select.style.display = 'none';
+        if (esMobile) {
+            ocultarListaMobile('listaClientesMobile');
+        }
+    }
+}
+
+function mostrarSelectClientes(clientesFiltrados, select) {
+    select.innerHTML = '';
+    
+    clientesFiltrados.forEach(cliente => {
+        const option = document.createElement('option');
+        option.value = cliente.id;
+        option.textContent = `${cliente.razon_social} - ${cliente.dni_ruc}`;
+        option.dataset.cliente = JSON.stringify(cliente);
+        select.appendChild(option);
+    });
+    
+    // Remover eventos anteriores
+    const newSelect = select.cloneNode(true);
+    select.parentNode.replaceChild(newSelect, select);
+    
+    // Agregar eventos
+    newSelect.addEventListener('change', function() {
+        if (this.selectedIndex >= 0) {
+            const clienteData = JSON.parse(this.options[this.selectedIndex].dataset.cliente);
+            seleccionarCliente(clienteData);
+        }
+    });
+    
+    newSelect.style.display = 'block';
+}
+
+function mostrarListaMobileClientes(clientesFiltrados) {
+    const container = document.getElementById('listaClientesMobile');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    clientesFiltrados.forEach(cliente => {
+        const item = document.createElement('div');
+        item.className = 'mobile-list-item';
+        item.textContent = `${cliente.razon_social} - ${cliente.dni_ruc}`;
+        
+        // Eventos táctiles
+        item.addEventListener('click', function() {
+            seleccionarCliente(cliente);
+        });
+        
+        item.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            seleccionarCliente(cliente);
+        });
+        
+        container.appendChild(item);
+    });
+    
+    container.style.display = 'block';
+}
+
+function ocultarListaMobile(containerId) {
+    const container = document.getElementById(containerId);
+    if (container) {
+        container.style.display = 'none';
     }
 }
 
@@ -420,6 +485,9 @@ function seleccionarCliente(cliente) {
     clienteSeleccionado = cliente;
     document.getElementById('buscarClienteCotizacion').value = `${cliente.razon_social} - ${cliente.dni_ruc}`;
     document.getElementById('selectCliente').style.display = 'none';
+    
+    // Ocultar lista móvil si existe
+    ocultarListaMobile('listaClientesMobile');
     
     // Mostrar datos del cliente
     const infoCliente = document.getElementById('infoCliente');
@@ -437,13 +505,20 @@ function limpiarClienteSeleccionado() {
     document.getElementById('buscarClienteCotizacion').value = '';
     document.getElementById('selectCliente').style.display = 'none';
     document.getElementById('datosClienteSeleccionado').style.display = 'none';
+    
+    // Ocultar lista móvil si existe
+    ocultarListaMobile('listaClientesMobile');
 }
 
 function buscarProductosCotizacion(termino) {
     const select = document.getElementById('selectProducto');
+    const esMobile = window.innerWidth <= 768;
     
     if (termino.length < 2) {
         select.style.display = 'none';
+        if (esMobile) {
+            ocultarListaMobile('listaProductosMobile');
+        }
         return;
     }
 
@@ -451,20 +526,77 @@ function buscarProductosCotizacion(termino) {
         producto.nombre.toLowerCase().includes(termino.toLowerCase())
     );
 
-    select.innerHTML = '';
-    
     if (productosFiltrados.length > 0) {
-        productosFiltrados.forEach(producto => {
-            const option = document.createElement('option');
-            option.value = producto.id;
-            option.textContent = `${producto.nombre} - S/ ${parseFloat(producto.precio).toFixed(2)}`;
-            option.addEventListener('click', () => seleccionarProducto(producto));
-            select.appendChild(option);
-        });
-        select.style.display = 'block';
+        if (esMobile) {
+            // Usar lista de botones para móviles
+            mostrarListaMobileProductos(productosFiltrados);
+            select.style.display = 'none';
+        } else {
+            // Usar select tradicional para desktop
+            mostrarSelectProductos(productosFiltrados, select);
+        }
     } else {
         select.style.display = 'none';
+        if (esMobile) {
+            ocultarListaMobile('listaProductosMobile');
+        }
     }
+}
+
+function mostrarSelectProductos(productosFiltrados, select) {
+    select.innerHTML = '';
+    
+    productosFiltrados.forEach(producto => {
+        const option = document.createElement('option');
+        option.value = producto.id;
+        option.textContent = `${producto.nombre} - S/ ${parseFloat(producto.precio).toFixed(2)}`;
+        option.dataset.producto = JSON.stringify(producto);
+        select.appendChild(option);
+    });
+    
+    // Remover eventos anteriores
+    const newSelect = select.cloneNode(true);
+    select.parentNode.replaceChild(newSelect, select);
+    
+    // Agregar eventos
+    newSelect.addEventListener('change', function() {
+        if (this.selectedIndex >= 0) {
+            const productoData = JSON.parse(this.options[this.selectedIndex].dataset.producto);
+            seleccionarProducto(productoData);
+        }
+    });
+    
+    newSelect.style.display = 'block';
+}
+
+function mostrarListaMobileProductos(productosFiltrados) {
+    const container = document.getElementById('listaProductosMobile');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    
+    productosFiltrados.forEach(producto => {
+        const item = document.createElement('div');
+        item.className = 'mobile-list-item';
+        item.innerHTML = `
+            <div><strong>${producto.nombre}</strong></div>
+            <div class="text-muted small">S/ ${parseFloat(producto.precio).toFixed(2)}</div>
+        `;
+        
+        // Eventos táctiles
+        item.addEventListener('click', function() {
+            seleccionarProducto(producto);
+        });
+        
+        item.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            seleccionarProducto(producto);
+        });
+        
+        container.appendChild(item);
+    });
+    
+    container.style.display = 'block';
 }
 
 function seleccionarProducto(producto) {
@@ -472,6 +604,10 @@ function seleccionarProducto(producto) {
     document.getElementById('buscarProductoCotizacion').value = producto.nombre;
     document.getElementById('precioProductoSeleccionado').value = parseFloat(producto.precio).toFixed(2);
     document.getElementById('selectProducto').style.display = 'none';
+    
+    // Ocultar lista móvil si existe
+    ocultarListaMobile('listaProductosMobile');
+    
     document.getElementById('cantidadProducto').focus();
     calcularTotalProducto();
 }
@@ -1274,10 +1410,15 @@ function inicializarMovil() {
         const selects = document.querySelectorAll('#selectCliente, #selectProducto');
         selects.forEach(select => {
             select.size = 3;
+            // Agregar clase para mejor estilo móvil
+            select.classList.add('mobile-select');
         });
         
         // Mejorar experiencia táctil
         agregarEventosTactiles();
+        
+        // Configurar alternativa de botones para móviles
+        configurarAlternativaMobile();
     }
     
     // Listener para cambios de orientación
@@ -1293,21 +1434,61 @@ function inicializarMovil() {
     });
 }
 
+function configurarAlternativaMobile() {
+    // Crear contenedores alternativos para listas en móviles
+    const selectCliente = document.getElementById('selectCliente');
+    const selectProducto = document.getElementById('selectProducto');
+    
+    if (selectCliente && !document.getElementById('listaClientesMobile')) {
+        const container = document.createElement('div');
+        container.id = 'listaClientesMobile';
+        container.className = 'mobile-list-container';
+        container.style.display = 'none';
+        selectCliente.parentNode.insertBefore(container, selectCliente.nextSibling);
+    }
+    
+    if (selectProducto && !document.getElementById('listaProductosMobile')) {
+        const container = document.createElement('div');
+        container.id = 'listaProductosMobile';
+        container.className = 'mobile-list-container';
+        container.style.display = 'none';
+        selectProducto.parentNode.insertBefore(container, selectProducto.nextSibling);
+    }
+}
+
 function agregarEventosTactiles() {
     // Mejorar selección en listas desplegables
     const selectCliente = document.getElementById('selectCliente');
     const selectProducto = document.getElementById('selectProducto');
     
+    // Configurar eventos táctiles para select de cliente
     if (selectCliente) {
+        // Remover eventos anteriores para evitar duplicados
+        selectCliente.removeEventListener('touchstart', handleTouchStart);
+        selectCliente.removeEventListener('touchend', handleTouchEnd);
+        
+        selectCliente.addEventListener('touchstart', handleTouchStart, { passive: false });
+        selectCliente.addEventListener('touchend', handleTouchEnd, { passive: false });
+        
+        // Mejorar la selección con tap
         selectCliente.addEventListener('touchstart', function(e) {
-            e.stopPropagation();
-        });
+            this.focus();
+        }, { passive: true });
     }
     
+    // Configurar eventos táctiles para select de producto
     if (selectProducto) {
+        // Remover eventos anteriores para evitar duplicados
+        selectProducto.removeEventListener('touchstart', handleTouchStart);
+        selectProducto.removeEventListener('touchend', handleTouchEnd);
+        
+        selectProducto.addEventListener('touchstart', handleTouchStart, { passive: false });
+        selectProducto.addEventListener('touchend', handleTouchEnd, { passive: false });
+        
+        // Mejorar la selección con tap
         selectProducto.addEventListener('touchstart', function(e) {
-            e.stopPropagation();
-        });
+            this.focus();
+        }, { passive: true });
     }
     
     // Mejorar botones de acción
@@ -1315,12 +1496,28 @@ function agregarEventosTactiles() {
     botones.forEach(btn => {
         btn.addEventListener('touchstart', function() {
             this.style.transform = 'scale(0.95)';
-        });
+            this.style.transition = 'transform 0.1s';
+        }, { passive: true });
         
         btn.addEventListener('touchend', function() {
             this.style.transform = 'scale(1)';
-        });
+        }, { passive: true });
     });
+}
+
+// Funciones auxiliares para manejo de eventos táctiles
+function handleTouchStart(e) {
+    e.stopPropagation();
+}
+
+function handleTouchEnd(e) {
+    e.stopPropagation();
+    
+    // Forzar la selección en móviles
+    if (this.selectedIndex >= 0) {
+        const event = new Event('change', { bubbles: true });
+        this.dispatchEvent(event);
+    }
 }
 
 function ajustarVistaMobile() {

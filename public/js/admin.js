@@ -198,32 +198,35 @@ function mostrarProductos(productos) {
         return;
     }
     
-    const grid = document.createElement('div');
-    grid.className = 'productos-grid';
-    
-    productos.forEach(producto => {
-        const card = document.createElement('div');
-        card.className = 'producto-card';
-        card.innerHTML = `
-            <div class="producto-card-body">
-                <div class="producto-info">
-                    <div class="producto-nombre">${producto.nombre}</div>
-                    <div class="producto-precio">${formatearMoneda(producto.precio)}</div>
-                </div>
-                <div class="producto-acciones">
-                    <button class="btn btn-warning btn-sm" onclick="editarProducto(${producto.id})" title="Editar">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-danger btn-sm" onclick="eliminarProducto(${producto.id})" title="Eliminar">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-        grid.appendChild(card);
-    });
-    
-    lista.appendChild(grid);
+    lista.innerHTML = `
+        <div class="table-responsive mobile-scroll">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Nombre</th>
+                        <th class="text-center" style="min-width:110px;">Precio</th>
+                        <th class="text-center" style="min-width:90px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${productos.map(p => `
+                        <tr>
+                            <td class="align-middle">${p.nombre}</td>
+                            <td class="text-center align-middle fw-bold text-primary">${formatearMoneda(p.precio)}</td>
+                            <td class="text-center align-middle">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-warning" onclick="editarProducto(${p.id})" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-danger" onclick="eliminarProducto(${p.id})" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
 }
 
 function mostrarClientes(clientes) {

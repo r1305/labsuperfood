@@ -274,80 +274,8 @@
                 </div>
             </div>
 
-            <!-- Modal Tipos de Precio -->
-            <div class="modal fade" id="modalTiposPrecio" tabindex="-1">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title"><i class="fas fa-tags"></i> Tipos de Precio: <span id="nombreProductoTipos"></span></h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <h6 class="mb-3"><i class="fas fa-plus-circle"></i> Nuevo Tipo de Precio</h6>
-                                    <div class="row g-2 align-items-end">
-                                        <div class="col-md-6 col-12">
-                                            <label class="form-label">Tipo</label>
-                                            <input type="text" class="form-control" id="inputTipoPrecio"
-                                                placeholder="Ej: Mayorista, Minorista, VIP...">
-                                        </div>
-                                        <div class="col-md-4 col-8">
-                                            <label class="form-label">Precio</label>
-                                            <div class="input-group">
-                                                <span class="input-group-text">S/</span>
-                                                <input type="number" step="0.01" min="0" class="form-control"
-                                                    id="inputPrecioTipo" placeholder="0.00">
-                                            </div>
-                                        </div>
-                                        <div class="col-md-2 col-4">
-                                            <button class="btn btn-primary w-100" onclick="agregarTipoPrecio()">
-                                                <i class="fas fa-plus"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div id="listaTiposPrecio"></div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
             <!-- Modal Producto -->
-            <div class="modal fade" id="modalProducto" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="tituloModalProducto"><i class="fas fa-plus-circle"></i> Nuevo Producto</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="formProducto">
-                                <input type="hidden" id="productoId" name="id">
-                                <div class="mb-3">
-                                    <label for="nombreProducto" class="form-label">Nombre del Producto</label>
-                                    <input type="text" class="form-control" id="nombreProducto" name="nombre"
-                                        placeholder="Ej: Proteína Whey 1kg" required>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="fas fa-times"></i> Cancelar
-                            </button>
-                            <button type="button" class="btn btn-primary" id="btnGuardarProducto">
-                                <i class="fas fa-save"></i> Guardar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab Clientes -->
+            <!-- Modal Clientes y Etiquetas se mueven fuera del tab-content -->
             <div class="tab-pane fade" id="clientes" role="tabpanel">
                 <div class="row mt-3">
                     <div class="col-12">
@@ -374,101 +302,7 @@
             </div>
 
             <!-- Modal Etiquetas Cliente -->
-            <div class="modal fade" id="modalEtiquetas" tabindex="-1">
-                <div class="modal-dialog modal-lg">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title"><i class="fas fa-tags"></i> Etiquetas de <span id="nombreClienteEtiquetas"></span></h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <!-- Agregar etiqueta -->
-                            <div class="card mb-3">
-                                <div class="card-body">
-                                    <h6 class="mb-3"><i class="fas fa-plus-circle"></i> Nueva Etiqueta</h6>
-                                    <div class="row g-2">
-                                        <div class="col-md-5 col-12">
-                                            <label class="form-label">Marca</label>
-                                            <input type="text" class="form-control" id="inputMarca" placeholder="Ej: Nike, Adidas...">
-                                        </div>
-                                        <div class="col-md-5 col-12">
-                                            <label class="form-label">Nombre del Producto</label>
-                                            <input type="text" class="form-control" id="inputNombreProductoEtiqueta" placeholder="Ej: Zapatillas Air Max...">
-                                        </div>
-                                        <div class="col-md-12 col-12">
-                                            <label class="form-label">Foto</label>
-                                            <input type="file" class="form-control" id="inputFotoEtiqueta" accept="image/*">
-                                        </div>
-                                        <div class="col-12">
-                                            <button class="btn btn-primary w-100" onclick="agregarEtiqueta()">
-                                                <i class="fas fa-plus"></i> Agregar Etiqueta
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Lista de etiquetas -->
-                            <div id="listaEtiquetasCliente"></div>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal fade" id="modalCliente" tabindex="-1">
-                <div class="modal-dialog">
-                    <div class="modal-content">
-                        <div class="modal-header">
-                            <h5 class="modal-title" id="tituloModalCliente"><i class="fas fa-user-plus"></i> Nuevo Cliente</h5>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                        </div>
-                        <div class="modal-body">
-                            <form id="formCliente">
-                                <input type="hidden" id="clienteId" name="id">
-                                <div class="mb-3">
-                                    <label for="razonSocial" class="form-label">Razón Social</label>
-                                    <input type="text" class="form-control" id="razonSocial" name="razon_social"
-                                        placeholder="Ej: Empresa SAC" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="dniRuc" class="form-label">DNI / RUC</label>
-                                    <input type="text" class="form-control" id="dniRuc" name="dni_ruc"
-                                        placeholder="Ej: 20123456789" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="distrito" class="form-label">Distrito</label>
-                                    <input type="text" class="form-control" id="distrito" name="distrito"
-                                        placeholder="Ej: Miraflores" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="direccion" class="form-label">Dirección</label>
-                                    <input type="text" class="form-control" id="direccion" name="direccion"
-                                        placeholder="Ej: Av. Principal 123" required>
-                                </div>
-                                <div class="mb-3">
-                                    <label for="telefono" class="form-label">Teléfono</label>
-                                    <div class="input-group">
-                                        <span class="input-group-text"><i class="fas fa-phone"></i></span>
-                                        <input type="text" class="form-control" id="telefono" name="telefono"
-                                            placeholder="Ej: 987654321" required>
-                                    </div>
-                                </div>
-                            </form>
-                        </div>
-                        <div class="modal-footer">
-                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                                <i class="fas fa-times"></i> Cancelar
-                            </button>
-                            <button type="button" class="btn btn-primary" id="btnGuardarCliente">
-                                <i class="fas fa-save"></i> Guardar
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tab Configuración -->
+            <!-- Modal Cliente se mueven fuera del tab-content -->
             <div class="tab-pane fade" id="configuracion" role="tabpanel">
                 <div class="row mt-4">
                     <div class="col-12">
@@ -545,6 +379,174 @@
                 </div>
             </div>
         </div>
+        </div>
+    </div>
+
+    <!-- Modal Tipos de Precio -->
+    <div class="modal fade" id="modalTiposPrecio" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-tags"></i> Tipos de Precio: <span id="nombreProductoTipos"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="mb-3"><i class="fas fa-plus-circle"></i> Nuevo Tipo de Precio</h6>
+                            <div class="row g-2 align-items-end">
+                                <div class="col-md-6 col-12">
+                                    <label class="form-label">Tipo</label>
+                                    <input type="text" class="form-control" id="inputTipoPrecio"
+                                        placeholder="Ej: Mayorista, Minorista, VIP...">
+                                </div>
+                                <div class="col-md-4 col-8">
+                                    <label class="form-label">Precio</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">S/</span>
+                                        <input type="number" step="0.01" min="0" class="form-control"
+                                            id="inputPrecioTipo" placeholder="0.00">
+                                    </div>
+                                </div>
+                                <div class="col-md-2 col-4">
+                                    <button class="btn btn-primary w-100" onclick="agregarTipoPrecio()">
+                                        <i class="fas fa-plus"></i> Agregar
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="listaTiposPrecio"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Producto -->
+    <div class="modal fade" id="modalProducto" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tituloModalProducto"><i class="fas fa-plus-circle"></i> Nuevo Producto</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formProducto">
+                        <input type="hidden" id="productoId" name="id">
+                        <div class="mb-3">
+                            <label for="nombreProducto" class="form-label">Nombre del Producto</label>
+                            <input type="text" class="form-control" id="nombreProducto" name="nombre"
+                                placeholder="Ej: Proteína Whey 1kg" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarProducto">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cliente -->
+    <div class="modal fade" id="modalCliente" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tituloModalCliente"><i class="fas fa-user-plus"></i> Nuevo Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCliente">
+                        <input type="hidden" id="clienteId" name="id">
+                        <div class="mb-3">
+                            <label for="razonSocial" class="form-label">Razón Social</label>
+                            <input type="text" class="form-control" id="razonSocial" name="razon_social"
+                                placeholder="Ej: Empresa SAC" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="dniRuc" class="form-label">DNI / RUC</label>
+                            <input type="text" class="form-control" id="dniRuc" name="dni_ruc"
+                                placeholder="Ej: 20123456789" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="distrito" class="form-label">Distrito</label>
+                            <input type="text" class="form-control" id="distrito" name="distrito"
+                                placeholder="Ej: Miraflores" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="direccion" class="form-label">Dirección</label>
+                            <input type="text" class="form-control" id="direccion" name="direccion"
+                                placeholder="Ej: Av. Principal 123" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="telefono" class="form-label">Teléfono</label>
+                            <div class="input-group">
+                                <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                                <input type="text" class="form-control" id="telefono" name="telefono"
+                                    placeholder="Ej: 987654321" required>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarCliente">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Etiquetas Cliente -->
+    <div class="modal fade" id="modalEtiquetas" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-tags"></i> Etiquetas de <span id="nombreClienteEtiquetas"></span></h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="mb-3"><i class="fas fa-plus-circle"></i> Nueva Etiqueta</h6>
+                            <div class="row g-2">
+                                <div class="col-md-5 col-12">
+                                    <label class="form-label">Marca</label>
+                                    <input type="text" class="form-control" id="inputMarca" placeholder="Ej: Nike, Adidas...">
+                                </div>
+                                <div class="col-md-5 col-12">
+                                    <label class="form-label">Nombre del Producto</label>
+                                    <input type="text" class="form-control" id="inputNombreProductoEtiqueta" placeholder="Ej: Zapatillas Air Max...">
+                                </div>
+                                <div class="col-md-12 col-12">
+                                    <label class="form-label">Foto</label>
+                                    <input type="file" class="form-control" id="inputFotoEtiqueta" accept="image/*">
+                                </div>
+                                <div class="col-12">
+                                    <button class="btn btn-primary w-100" onclick="agregarEtiqueta()">
+                                        <i class="fas fa-plus"></i> Agregar Etiqueta
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="listaEtiquetasCliente"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
         </div>
     </div>
 

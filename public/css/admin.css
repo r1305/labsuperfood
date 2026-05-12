@@ -154,6 +154,95 @@ body {
     margin-top: 15px;
 }
 
+/* ===== PRODUCTOS GRID ===== */
+.productos-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 12px;
+}
+
+.producto-card {
+    background: white;
+    border: 1px solid #dee2e6;
+    border-radius: 10px;
+    transition: box-shadow 0.2s, transform 0.1s;
+    overflow: hidden;
+}
+
+.producto-card:hover {
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    transform: translateY(-2px);
+}
+
+.producto-card-body {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 12px;
+    gap: 10px;
+}
+
+.producto-info {
+    flex: 1;
+    min-width: 0;
+}
+
+.producto-nombre {
+    font-weight: 600;
+    font-size: 14px;
+    color: #212529;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-bottom: 4px;
+}
+
+.producto-precio {
+    font-size: 15px;
+    font-weight: 700;
+    color: #007bff;
+}
+
+.producto-acciones {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.producto-acciones .btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+}
+
+@media (max-width: 768px) {
+    .productos-grid {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+    
+    .producto-card-body {
+        padding: 12px 10px;
+    }
+    
+    .producto-nombre {
+        font-size: 15px;
+    }
+    
+    .producto-precio {
+        font-size: 16px;
+    }
+    
+    .producto-acciones .btn {
+        width: 42px;
+        height: 42px;
+    }
+}
+
 /* ===== RESPONSIVE DESIGN ===== */
 
 /* Tablets y pantallas medianas */

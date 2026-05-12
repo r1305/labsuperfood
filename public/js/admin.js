@@ -183,32 +183,47 @@ async function cargarClientes() {
 
 function mostrarProductos(productos) {
     const lista = document.getElementById('listaProductos');
+    const contador = document.getElementById('contadorProductos');
     lista.innerHTML = '';
     
+    if (contador) contador.textContent = productos.length;
+    
     if (productos.length === 0) {
-        lista.innerHTML = '<p class="text-muted">No hay productos registrados</p>';
+        lista.innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <i class="fas fa-box-open fa-3x mb-3 d-block"></i>
+                <p class="mb-0">No hay productos registrados</p>
+                <small>Agrega tu primer producto usando el formulario</small>
+            </div>`;
         return;
     }
     
+    const grid = document.createElement('div');
+    grid.className = 'productos-grid';
+    
     productos.forEach(producto => {
-        const item = document.createElement('div');
-        item.className = 'lista-item';
-        item.innerHTML = `
-            <div class="item-content">
-                <strong>${producto.nombre}</strong><br>
-                <span class="text-muted">Precio: ${formatearMoneda(producto.precio)}</span>
-            </div>
-            <div class="item-actions">
-                <button class="btn btn-warning btn-sm" onclick="editarProducto(${producto.id})">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button class="btn btn-danger btn-sm" onclick="eliminarProducto(${producto.id})">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
+        const card = document.createElement('div');
+        card.className = 'producto-card';
+        card.innerHTML = `
+            <div class="producto-card-body">
+                <div class="producto-info">
+                    <div class="producto-nombre">${producto.nombre}</div>
+                    <div class="producto-precio">${formatearMoneda(producto.precio)}</div>
+                </div>
+                <div class="producto-acciones">
+                    <button class="btn btn-warning btn-sm" onclick="editarProducto(${producto.id})" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarProducto(${producto.id})" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
         `;
-        lista.appendChild(item);
+        grid.appendChild(card);
     });
+    
+    lista.appendChild(grid);
 }
 
 function mostrarClientes(clientes) {
@@ -265,10 +280,12 @@ function editarProducto(id) {
         document.getElementById('productoId').value = producto.id;
         document.getElementById('nombreProducto').value = producto.nombre;
         document.getElementById('precioProducto').value = producto.precio;
-        document.getElementById('tituloFormProducto').textContent = 'Editar Producto';
-        document.getElementById('btnProducto').textContent = 'Actualizar Producto';
-        document.getElementById('btnCancelarProducto').style.display = 'inline-block';
+        document.getElementById('tituloFormProducto').innerHTML = '<i class="fas fa-edit"></i> Editar Producto';
+        document.getElementById('btnProducto').innerHTML = '<i class="fas fa-save"></i> Actualizar Producto';
+        document.getElementById('btnCancelarProducto').style.display = 'block';
         editandoProducto = true;
+        // Scroll al formulario en móviles
+        document.getElementById('formProducto').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
 
@@ -290,8 +307,8 @@ function editarCliente(id) {
 
 function cancelarEdicionProducto() {
     document.getElementById('formProducto').reset();
-    document.getElementById('tituloFormProducto').textContent = 'Agregar Producto';
-    document.getElementById('btnProducto').textContent = 'Agregar Producto';
+    document.getElementById('tituloFormProducto').innerHTML = '<i class="fas fa-plus-circle"></i> Agregar Producto';
+    document.getElementById('btnProducto').innerHTML = '<i class="fas fa-save"></i> Guardar Producto';
     document.getElementById('btnCancelarProducto').style.display = 'none';
     editandoProducto = false;
 }

@@ -80,6 +80,18 @@ async function inicializarBaseDatos() {
     `);
     console.log('✅ Tabla configuracion_bancaria creada');
 
+    // Crear tabla company
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS company (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        razon_social VARCHAR(255) NOT NULL,
+        ruc_dni VARCHAR(20) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('\u2705 Tabla company creada');
+
     // Crear tabla tipo_precio
     await connection.execute(`
       CREATE TABLE IF NOT EXISTS tipo_precio (

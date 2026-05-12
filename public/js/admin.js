@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarClientes();
     cargarCotizaciones();
     cargarCuentasBancarias();
+    cargarCompany();
 
     // Inicializar cotización
     inicializarCotizacion();
@@ -60,6 +61,42 @@ document.addEventListener('DOMContentLoaded', function() {
 
     document.getElementById('buscarCliente').addEventListener('input', function() {
         filtrarClientes(this.value);
+    });
+
+    document.getElementById('buscarCompany').addEventListener('input', function() {
+        const filtrados = companyData.filter(c =>
+            c.razon_social.toLowerCase().includes(this.value.toLowerCase()) ||
+            c.ruc_dni.includes(this.value)
+        );
+        mostrarCompany(filtrados);
+    });
+
+    // Botón guardar compañía
+    document.getElementById('btnGuardarCompany').addEventListener('click', async function() {
+        const form = document.getElementById('formCompany');
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+        const data = {
+            razon_social: document.getElementById('companyRazonSocial').value,
+            ruc_dni: document.getElementById('companyRucDni').value
+        };
+        const id = document.getElementById('companyId').value;
+        try {
+            const response = await fetch(editandoCompany ? `/company/${id}` : '/company', {
+                method: editandoCompany ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
+            if (result.success) {
+                bootstrap.Modal.getInstance(document.getElementById('modalCompany')).hide();
+                editandoCompany = false;
+                cargarCompany();
+            } else {
+                alert(result.message);
+            }
+        } catch (error) {
+            alert('Error al procesar compañía');
+        }
     });
 
     // Precio y descuento producto editable
@@ -1677,6 +1714,146 @@ async function cargarTiposPrecioEnCotizacion(productoId) {
     } catch (error) {
         console.error('Error cargando tipos de precio:', error);
         colTipo.style.display = 'none';
+    }
+}
+
+// ===== FUNCIONES DE COMPANY =====
+let companyData = [];
+let editandoCompany = false;
+let paginaActualCompany = 1;
+const companyPorPagina = 10;
+let companyFiltrados = [];
+
+async function cargarCompany() {
+    try {
+        const response = await fetch('/company');
+        companyData = await response.json();
+        mostrarCompany(companyData);
+    } catch (error) {
+        console.error('Error cargando compañías:', error);
+    }
+}
+
+function mostrarCompany(companies) {
+    companyFiltrados = companies;
+    paginaActualCompany = 1;
+    renderTablaCompany();
+}
+
+function renderTablaCompany() {
+    const lista = document.getElementById('listaCompany');
+    const contador = document.getElementById('contadorCompany');
+    const paginacion = document.getElementById('paginacionCompany');
+
+    if (contador) contador.textContent = companyFiltrados.length;
+
+    if (companyFiltrados.length === 0) {
+        lista.innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <i class="fas fa-building fa-3x mb-3 d-block"></i>
+                <p class="mb-0">No hay compañías registradas</p>
+                <small>Haz clic en "Nueva Compañía" para agregar una</small>
+            </div>`;
+        paginacion.innerHTML = '';
+        return;
+    }
+
+    const totalPaginas = Math.ceil(companyFiltrados.length / companyPorPagina);
+    const inicio = (paginaActualCompany - 1) * companyPorPagina;
+    const fin = inicio + companyPorPagina;
+    const paginaData = companyFiltrados.slice(inicio, fin);
+
+    lista.innerHTML = `
+        <div class="table-responsive mobile-scroll">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center">#</th>
+                        <th>Razón Social</th>
+                        <th class="text-center" style="min-width:130px;">RUC/DNI</th>
+                        <th class="text-center" style="min-width:90px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${paginaData.map((c, i) => `
+                        <tr>
+                            <td class="text-center align-middle text-muted">${inicio + i + 1}</td>
+                            <td class="align-middle fw-semibold">${c.razon_social}</td>
+                            <td class="text-center align-middle">${c.ruc_dni}</td>
+                            <td class="text-center align-middle">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-warning" onclick="editarCompany(${c.id})" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-danger" onclick="eliminarCompany(${c.id})" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+
+    if (totalPaginas <= 1) {
+        paginacion.innerHTML = `<small class="text-muted">Mostrando ${companyFiltrados.length} compañía(s)</small>`;
+        return;
+    }
+
+    let btnsPaginas = '';
+    for (let i = 1; i <= totalPaginas; i++) {
+        btnsPaginas += `<button class="btn btn-sm ${i === paginaActualCompany ? 'btn-primary' : 'btn-outline-secondary'}" onclick="cambiarPaginaCompany(${i})">${i}</button>`;
+    }
+
+    paginacion.innerHTML = `
+        <small class="text-muted">Mostrando ${inicio + 1}-${Math.min(fin, companyFiltrados.length)} de ${companyFiltrados.length}</small>
+        <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary" onclick="cambiarPaginaCompany(${paginaActualCompany - 1})" ${paginaActualCompany === 1 ? 'disabled' : ''}>
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            ${btnsPaginas}
+            <button class="btn btn-outline-secondary" onclick="cambiarPaginaCompany(${paginaActualCompany + 1})" ${paginaActualCompany === totalPaginas ? 'disabled' : ''}>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>`;
+}
+
+function cambiarPaginaCompany(pagina) {
+    const totalPaginas = Math.ceil(companyFiltrados.length / companyPorPagina);
+    if (pagina < 1 || pagina > totalPaginas) return;
+    paginaActualCompany = pagina;
+    renderTablaCompany();
+}
+
+function abrirModalCompany() {
+    document.getElementById('formCompany').reset();
+    document.getElementById('companyId').value = '';
+    document.getElementById('tituloModalCompany').innerHTML = '<i class="fas fa-building"></i> Nueva Compañía';
+    editandoCompany = false;
+    new bootstrap.Modal(document.getElementById('modalCompany')).show();
+}
+
+function editarCompany(id) {
+    const company = companyData.find(c => c.id === id);
+    if (company) {
+        document.getElementById('companyId').value = company.id;
+        document.getElementById('companyRazonSocial').value = company.razon_social;
+        document.getElementById('companyRucDni').value = company.ruc_dni;
+        document.getElementById('tituloModalCompany').innerHTML = '<i class="fas fa-edit"></i> Editar Compañía';
+        editandoCompany = true;
+        new bootstrap.Modal(document.getElementById('modalCompany')).show();
+    }
+}
+
+async function eliminarCompany(id) {
+    if (!confirm('¿Eliminar esta compañía?')) return;
+    try {
+        const response = await fetch(`/company/${id}`, { method: 'DELETE' });
+        const result = await response.json();
+        if (result.success) cargarCompany();
+        else alert(result.message);
+    } catch (error) {
+        alert('Error al eliminar compañía');
     }
 }
 

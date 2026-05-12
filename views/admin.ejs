@@ -44,6 +44,11 @@
                     <i class="fas fa-cog d-none d-md-inline"></i> <span class="d-none d-sm-inline">Config</span><span class="d-sm-none">Cfg</span>
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="company-tab" data-bs-toggle="tab" data-bs-target="#company" type="button" role="tab">
+                    <i class="fas fa-building d-none d-md-inline"></i> Compañía
+                </button>
+            </li>
         </ul>
 
         <div class="tab-content" id="adminTabsContent">
@@ -303,6 +308,31 @@
 
             <!-- Modal Etiquetas Cliente -->
             <!-- Modal Cliente se mueven fuera del tab-content -->
+            <div class="tab-pane fade" id="company" role="tabpanel">
+                <div class="row mt-3">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-building"></i> Compañías <span class="badge bg-light text-dark ms-2" id="contadorCompany">0</span></h5>
+                                <button class="btn btn-light btn-sm" onclick="abrirModalCompany()">
+                                    <i class="fas fa-plus"></i> Nueva Compañía
+                                </button>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                        <input type="text" class="form-control" id="buscarCompany" placeholder="Buscar por razón social o RUC/DNI...">
+                                    </div>
+                                </div>
+                                <div id="listaCompany"></div>
+                                <div id="paginacionCompany" class="d-flex justify-content-between align-items-center mt-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="tab-pane fade" id="configuracion" role="tabpanel">
                 <div class="row mt-4">
                     <div class="col-12">
@@ -545,6 +575,41 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Compañía -->
+    <div class="modal fade" id="modalCompany" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tituloModalCompany"><i class="fas fa-building"></i> Nueva Compañía</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formCompany">
+                        <input type="hidden" id="companyId" name="id">
+                        <div class="mb-3">
+                            <label class="form-label">Razón Social</label>
+                            <input type="text" class="form-control" id="companyRazonSocial" name="razon_social"
+                                placeholder="Ej: Mi Empresa S.A.C" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">RUC / DNI</label>
+                            <input type="text" class="form-control" id="companyRucDni" name="ruc_dni"
+                                placeholder="Ej: 20123456789" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarCompany">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
                 </div>
             </div>
         </div>

@@ -732,6 +732,59 @@ app.delete('/productos/:id', async (req, res) => {
   }
 });
 
+// Rutas para company
+app.get('/company', async (req, res) => {
+  try {
+    const connection = await createConnection();
+    const [companies] = await connection.execute('SELECT * FROM company ORDER BY id DESC');
+    await connection.end();
+    res.json(companies);
+  } catch (error) {
+    console.error('Error:', error);
+    res.json([]);
+  }
+});
+
+app.post('/company', async (req, res) => {
+  try {
+    const { razon_social, ruc_dni } = req.body;
+    const connection = await createConnection();
+    await connection.execute('INSERT INTO company (razon_social, ruc_dni) VALUES (?, ?)', [razon_social, ruc_dni]);
+    await connection.end();
+    res.json({ success: true, message: 'Compañía agregada correctamente' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.json({ success: false, message: 'Error al agregar compañía' });
+  }
+});
+
+app.put('/company/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { razon_social, ruc_dni } = req.body;
+    const connection = await createConnection();
+    await connection.execute('UPDATE company SET razon_social = ?, ruc_dni = ? WHERE id = ?', [razon_social, ruc_dni, id]);
+    await connection.end();
+    res.json({ success: true, message: 'Compañía actualizada correctamente' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.json({ success: false, message: 'Error al actualizar compañía' });
+  }
+});
+
+app.delete('/company/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const connection = await createConnection();
+    await connection.execute('DELETE FROM company WHERE id = ?', [id]);
+    await connection.end();
+    res.json({ success: true, message: 'Compañía eliminada correctamente' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.json({ success: false, message: 'Error al eliminar compañía' });
+  }
+});
+
 // Rutas para clientes
 app.post('/clientes', async (req, res) => {
   try {

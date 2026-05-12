@@ -40,6 +40,15 @@ CREATE TABLE IF NOT EXISTS detalle_cotizaciones (
     FOREIGN KEY (producto_id) REFERENCES productos(id)
 );
 
+-- Crear tabla company
+CREATE TABLE IF NOT EXISTS company (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    razon_social VARCHAR(255) NOT NULL,
+    ruc_dni VARCHAR(20) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- Crear tabla tipo_precio
 CREATE TABLE IF NOT EXISTS tipo_precio (
     id INT AUTO_INCREMENT PRIMARY KEY,

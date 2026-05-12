@@ -554,10 +554,12 @@ function inicializarCotizacion() {
     // Tipo de precio
     document.getElementById('selectTipoPrecio').addEventListener('change', function() {
         const selected = this.options[this.selectedIndex];
-        if (selected && selected.dataset.precio) {
+        if (selected && selected.dataset.precio && selected.value !== '') {
             document.getElementById('precioProductoSeleccionado').value = parseFloat(selected.dataset.precio).toFixed(2);
-            calcularTotalProducto();
+        } else {
+            document.getElementById('precioProductoSeleccionado').value = '';
         }
+        calcularTotalProducto();
     });
 
     // Abono
@@ -1634,6 +1636,9 @@ async function cargarTiposPrecioEnCotizacion(productoId) {
     const colTipo = document.getElementById('colTipoPrecio');
     const selectTipo = document.getElementById('selectTipoPrecio');
 
+    // Limpiar y ocultar mientras carga
+    selectTipo.innerHTML = '<option value="">Cargando...</option>';
+
     try {
         const response = await fetch(`/productos/${productoId}/tipos-precio`);
         const tipos = await response.json();
@@ -1648,17 +1653,23 @@ async function cargarTiposPrecioEnCotizacion(productoId) {
                 opt.textContent = `${t.tipo} (${formatearMoneda(t.precio)})`;
                 selectTipo.appendChild(opt);
             });
+
             colTipo.style.display = 'block';
-            // Auto-seleccionar el primero y cargar su precio
+
+            // Si solo hay un tipo, auto-seleccionarlo y cargar precio
             if (tipos.length === 1) {
                 selectTipo.selectedIndex = 1;
                 document.getElementById('precioProductoSeleccionado').value = parseFloat(tipos[0].precio).toFixed(2);
                 calcularTotalProducto();
+            } else {
+                document.getElementById('precioProductoSeleccionado').value = '';
             }
         } else {
             colTipo.style.display = 'none';
+            document.getElementById('precioProductoSeleccionado').value = '';
         }
     } catch (error) {
+        console.error('Error cargando tipos de precio:', error);
         colTipo.style.display = 'none';
     }
 }

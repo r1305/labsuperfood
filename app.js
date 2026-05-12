@@ -213,9 +213,9 @@ app.put('/cotizaciones/:id', async (req, res) => {
 app.get('/cotizaciones/:id/pdf', async (req, res) => {
   let connection;
   let browser;
+  const { id } = req.params;
   
   try {
-    const { id } = req.params;
     console.log('=== GENERANDO PDF ===', id);
     
     connection = await createConnection();

@@ -323,24 +323,24 @@ function renderTablaClientes() {
             <table class="table table-hover table-sm">
                 <thead class="table-light">
                     <tr>
-                        <th>#</th>
-                        <th style="min-width:150px;">Razón Social</th>
-                        <th style="min-width:110px;">DNI/RUC</th>
-                        <th class="d-none d-md-table-cell" style="min-width:100px;">Distrito</th>
-                        <th class="d-none d-lg-table-cell" style="min-width:150px;">Dirección</th>
-                        <th class="d-none d-md-table-cell" style="min-width:100px;">Teléfono</th>
+                        <th class="text-center">#</th>
+                        <th class="text-center" style="min-width:150px;">Razón Social</th>
+                        <th class="text-center" style="min-width:110px;">DNI/RUC</th>
+                        <th class="text-center d-none d-md-table-cell" style="min-width:100px;">Distrito</th>
+                        <th class="text-center d-none d-lg-table-cell" style="min-width:150px;">Dirección</th>
+                        <th class="text-center d-none d-md-table-cell" style="min-width:100px;">Teléfono</th>
                         <th class="text-center" style="min-width:90px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${paginaData.map((c, i) => `
                         <tr>
-                            <td class="text-muted align-middle">${inicio + i + 1}</td>
-                            <td class="align-middle fw-semibold">${c.razon_social}</td>
-                            <td class="align-middle">${c.dni_ruc}</td>
-                            <td class="d-none d-md-table-cell align-middle">${c.distrito}</td>
-                            <td class="d-none d-lg-table-cell align-middle text-muted">${c.direccion}</td>
-                            <td class="d-none d-md-table-cell align-middle">${c.telefono}</td>
+                            <td class="text-center align-middle text-muted">${inicio + i + 1}</td>
+                            <td class="text-center align-middle fw-semibold">${c.razon_social}</td>
+                            <td class="text-center align-middle">${c.dni_ruc}</td>
+                            <td class="text-center align-middle d-none d-md-table-cell">${c.distrito}</td>
+                            <td class="text-center align-middle d-none d-lg-table-cell text-muted">${c.direccion}</td>
+                            <td class="text-center align-middle d-none d-md-table-cell">${c.telefono}</td>
                             <td class="text-center align-middle">
                                 <div class="btn-group btn-group-sm">
                                     <button class="btn btn-info" onclick="abrirEtiquetas(${c.id}, '${c.razon_social.replace(/'/g, "\\'")}')"

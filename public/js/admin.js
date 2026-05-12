@@ -35,7 +35,7 @@ let editandoCotizacion = false;
 let cotizacionEditandoId = null;
 
 // Variables para configuración bancaria
-let cuentasBancariasData = [];
+let bancosData = [];
 let editandoBanco = false;
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -1379,38 +1379,44 @@ const bancosPorPagina = 10;
 let bancosFiltrados = [];
 
 function inicializarConfiguracionBancaria() {
-    document.getElementById('buscarBanco').addEventListener('input', function() {
-        const filtrados = bancosData.filter(b =>
-            b.banco.toLowerCase().includes(this.value.toLowerCase()) ||
-            b.titular.toLowerCase().includes(this.value.toLowerCase()) ||
-            b.numero_cuenta.includes(this.value)
-        );
-        mostrarCuentasBancarias(filtrados);
-    });
+    const buscarBanco = document.getElementById('buscarBanco');
+    if (buscarBanco) {
+        buscarBanco.addEventListener('input', function() {
+            const filtrados = bancosData.filter(b =>
+                b.banco.toLowerCase().includes(this.value.toLowerCase()) ||
+                b.titular.toLowerCase().includes(this.value.toLowerCase()) ||
+                b.numero_cuenta.includes(this.value)
+            );
+            mostrarCuentasBancarias(filtrados);
+        });
+    }
 
-    document.getElementById('btnGuardarBanco').addEventListener('click', async function() {
-        const form = document.getElementById('formBanco');
-        if (!form.checkValidity()) { form.reportValidity(); return; }
-        const formData = new FormData(form);
-        const data = Object.fromEntries(formData);
-        try {
-            const response = await fetch(editandoBanco ? `/configuracion-bancaria/${data.id}` : '/configuracion-bancaria', {
-                method: editandoBanco ? 'PUT' : 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(data)
-            });
-            const result = await response.json();
-            if (result.success) {
-                bootstrap.Modal.getInstance(document.getElementById('modalBanco')).hide();
-                editandoBanco = false;
-                cargarCuentasBancarias();
-            } else {
-                alert(result.message);
+    const btnGuardarBanco = document.getElementById('btnGuardarBanco');
+    if (btnGuardarBanco) {
+        btnGuardarBanco.addEventListener('click', async function() {
+            const form = document.getElementById('formBanco');
+            if (!form.checkValidity()) { form.reportValidity(); return; }
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            try {
+                const response = await fetch(editandoBanco ? `/configuracion-bancaria/${data.id}` : '/configuracion-bancaria', {
+                    method: editandoBanco ? 'PUT' : 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    bootstrap.Modal.getInstance(document.getElementById('modalBanco')).hide();
+                    editandoBanco = false;
+                    cargarCuentasBancarias();
+                } else {
+                    alert(result.message);
+                }
+            } catch (error) {
+                alert('Error al procesar cuenta bancaria');
             }
-        } catch (error) {
-            alert('Error al procesar cuenta bancaria');
-        }
-    });
+        });
+    }
 }
 
 async function cargarCuentasBancarias() {
@@ -2083,12 +2089,15 @@ function seleccionarColor(color) {
 
 // Permitir agregar etiqueta con Enter
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('inputEtiqueta') && document.getElementById('inputEtiqueta').addEventListener('keydown', function(e) {
-        if (e.key === 'Enter') {
-            e.preventDefault();
-            agregarEtiqueta();
-        }
-    });
+    const inputEtiqueta = document.getElementById('inputEtiqueta');
+    if (inputEtiqueta) {
+        inputEtiqueta.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                agregarEtiqueta();
+            }
+        });
+    }
 });
 
 // Función para descargar PDF

@@ -257,9 +257,9 @@ function renderTablaProductos() {
 
     if (productosFiltrados.length === 0) {
         lista.innerHTML = `
-            <div class="text-center py-4 text-muted">
-                <i class="fas fa-box-open fa-3x mb-3 d-block"></i>
-                <p class="mb-0">No hay productos registrados</p>
+            <div class="empty-state">
+                <i class="fas fa-box-open"></i>
+                <p>No hay productos registrados</p>
                 <small>Haz clic en "Nuevo Producto" para agregar uno</small>
             </div>`;
         paginacion.innerHTML = '';
@@ -370,9 +370,9 @@ function renderTablaClientes() {
 
     if (clientesFiltrados.length === 0) {
         lista.innerHTML = `
-            <div class="text-center py-4 text-muted">
-                <i class="fas fa-users fa-3x mb-3 d-block"></i>
-                <p class="mb-0">No hay clientes registrados</p>
+            <div class="empty-state">
+                <i class="fas fa-users"></i>
+                <p>No hay clientes registrados</p>
                 <small>Haz clic en "Nuevo Cliente" para agregar uno</small>
             </div>`;
         paginacion.innerHTML = '';
@@ -1442,9 +1442,9 @@ function renderTablaBancos() {
 
     if (bancosFiltrados.length === 0) {
         lista.innerHTML = `
-            <div class="text-center py-4 text-muted">
-                <i class="fas fa-university fa-3x mb-3 d-block"></i>
-                <p class="mb-0">No hay cuentas bancarias registradas</p>
+            <div class="empty-state">
+                <i class="fas fa-university"></i>
+                <p>No hay cuentas bancarias registradas</p>
                 <small>Haz clic en "Nueva Cuenta" para agregar una</small>
             </div>`;
         paginacion.innerHTML = '';
@@ -1849,9 +1849,9 @@ function renderTablaCompany() {
 
     if (companyFiltrados.length === 0) {
         lista.innerHTML = `
-            <div class="text-center py-4 text-muted">
-                <i class="fas fa-building fa-3x mb-3 d-block"></i>
-                <p class="mb-0">No hay compañías registradas</p>
+            <div class="empty-state">
+                <i class="fas fa-building"></i>
+                <p>No hay compañías registradas</p>
                 <small>Haz clic en "Nueva Compañía" para agregar una</small>
             </div>`;
         paginacion.innerHTML = '';

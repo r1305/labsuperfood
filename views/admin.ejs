@@ -9,12 +9,16 @@
     <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
-    <div class="container-fluid mt-2">
-        <div class="row">
-            <div class="col-12">
-                <h1 class="text-center mb-3">Panel de Administración</h1>
-            </div>
-        </div>
+    <!-- Topbar -->
+    <div class="app-topbar">
+        <a href="/" class="brand">
+            <div class="brand-icon"><i class="fas fa-file-invoice-dollar"></i></div>
+            <span>Cotizaciones</span>
+        </a>
+        <span style="font-size:12px; color:var(--text-muted);"><i class="fas fa-circle" style="color:#22c55e; font-size:8px;"></i> Sistema activo</span>
+    </div>
+
+    <div class="container-fluid px-3 py-3">
         
         <ul class="nav nav-tabs justify-content-center" id="adminTabs" role="tablist">
             <li class="nav-item" role="presentation">
@@ -361,7 +365,6 @@
                     </div>
                 </div>
             </div>
-        </div>
         </div>
     </div>
 

@@ -808,7 +808,7 @@ function seleccionarProducto(producto) {
 function calcularTotalProducto() {
     if (!productoSeleccionado) return;
     
-    const cantidad = parseFloat(document.getElementById('cantidadProducto').value) || 0;
+    const cantidad = parseInt(document.getElementById('cantidadProducto').value) || 0;
     const precio = parseFloat(document.getElementById('precioProductoSeleccionado').value) || 0;
     const descuento = parseFloat(document.getElementById('descuentoProducto').value) || 0;
     const precioConDescuento = precio * (1 - descuento / 100);
@@ -823,7 +823,7 @@ function agregarItemCotizacion() {
         return;
     }
     
-    const cantidad = parseFloat(document.getElementById('cantidadProducto').value);
+    const cantidad = parseInt(document.getElementById('cantidadProducto').value);
     if (!cantidad || cantidad <= 0) {
         alert('Ingresa una cantidad válida');
         return;
@@ -872,7 +872,7 @@ function actualizarTablaItems() {
             <td>${item.nombre}</td>
             <td class="text-center">${formatearMoneda(item.precio)}</td>
             <td class="text-center">${item.descuento > 0 ? `<span class="badge bg-warning text-dark">${item.descuento}%</span>` : '-'}</td>
-            <td class="text-center">${formatearNumero(item.cantidad)}</td>
+            <td class="text-center">${item.cantidad}</td>
             <td class="text-center">${formatearMoneda(item.total)}</td>
             <td class="text-center">${formatearMoneda(item.total)}</td>
             <td class="text-center">

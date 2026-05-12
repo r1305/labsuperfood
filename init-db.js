@@ -55,7 +55,7 @@ async function inicializarBaseDatos() {
         id INT AUTO_INCREMENT PRIMARY KEY,
         cotizacion_id INT NOT NULL,
         producto_id INT NOT NULL,
-        cantidad DECIMAL(10,2) NOT NULL,
+        cantidad INT NOT NULL,
         precio_unitario DECIMAL(10,2) NOT NULL,
         total DECIMAL(10,2) NOT NULL,
         FOREIGN KEY (cotizacion_id) REFERENCES cotizaciones(id) ON DELETE CASCADE,

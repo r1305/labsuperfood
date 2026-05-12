@@ -39,64 +39,25 @@ app.get('/', (req, res) => {
 app.post('/cotizaciones', async (req, res) => {
   let connection;
   try {
-    console.log('=== GUARDANDO COTIZACIÓN ===');
-    console.log('Datos recibidos:', JSON.stringify(req.body, null, 2));
-    
     const { cliente_id, company_id, items, total, abono, saldo } = req.body;
-    
-    // Validaciones
-    if (!cliente_id) {
-      console.log('Error: cliente_id no proporcionado');
-      return res.json({ success: false, message: 'Cliente ID requerido' });
-    }
-    
-    if (!items || items.length === 0) {
-      console.log('Error: items vacío o no proporcionado');
-      return res.json({ success: false, message: 'Items requeridos' });
-    }
-    
-    console.log('Conectando a base de datos...');
+    if (!cliente_id) return res.json({ success: false, message: 'Cliente ID requerido' });
+    if (!items || items.length === 0) return res.json({ success: false, message: 'Items requeridos' });
     connection = await createConnection();
-    console.log('Conexión establecida');
-    
-    // Insertar cotización
-    console.log('Insertando cotización...');
     const [result] = await connection.execute(
       'INSERT INTO cotizaciones (cliente_id, company_id, total, abono, saldo) VALUES (?, ?, ?, ?, ?)',
       [cliente_id, company_id || 1, total, abono, saldo]
     );
-    
     const cotizacionId = result.insertId;
-    console.log('Cotización insertada con ID:', cotizacionId);
-    
-    // Insertar detalles
-    console.log('Insertando detalles...');
     for (const item of items) {
-      console.log('Insertando item:', item);
       await connection.execute(
         'INSERT INTO detalle_cotizaciones (cotizacion_id, producto_id, cantidad, precio_unitario, total) VALUES (?, ?, ?, ?, ?)',
         [cotizacionId, item.producto_id, item.cantidad, item.precio, item.total]
       );
     }
-    
-    console.log('Todos los detalles insertados');
     await connection.end();
-    console.log('=== COTIZACIÓN GUARDADA EXITOSAMENTE ===');
-    
     res.json({ success: true, message: 'Cotización guardada correctamente', id: cotizacionId });
   } catch (error) {
-    console.error('=== ERROR AL GUARDAR COTIZACIÓN ===');
-    console.error('Error completo:', error);
-    console.error('Stack trace:', error.stack);
-    
-    if (connection) {
-      try {
-        await connection.end();
-      } catch (closeError) {
-        console.error('Error cerrando conexión:', closeError);
-      }
-    }
-    
+    if (connection) try { await connection.end(); } catch (e) {}
     res.json({ success: false, message: 'Error al guardar cotización: ' + error.message });
   }
 });
@@ -113,7 +74,6 @@ app.get('/cotizaciones', async (req, res) => {
     await connection.end();
     res.json(cotizaciones);
   } catch (error) {
-    console.error('Error:', error);
     res.json([]);
   }
 });
@@ -122,36 +82,22 @@ app.get('/cotizaciones/:id/detalle', async (req, res) => {
   try {
     const { id } = req.params;
     const connection = await createConnection();
-    
-    // Obtener cotización con cliente
     const [cotizacion] = await connection.execute(`
       SELECT c.*, cl.razon_social, cl.dni_ruc, cl.distrito, cl.direccion, cl.telefono
       FROM cotizaciones c 
       JOIN clientes cl ON c.cliente_id = cl.id 
       WHERE c.id = ?
     `, [id]);
-    
-    // Obtener detalles
     const [detalles] = await connection.execute(`
       SELECT dc.*, p.nombre as producto_nombre
       FROM detalle_cotizaciones dc
       JOIN productos p ON dc.producto_id = p.id
       WHERE dc.cotizacion_id = ?
     `, [id]);
-    
     await connection.end();
-    
-    if (cotizacion.length === 0) {
-      return res.json({ success: false, message: 'Cotización no encontrada' });
-    }
-    
-    res.json({ 
-      success: true, 
-      cotizacion: cotizacion[0], 
-      detalles: detalles 
-    });
+    if (cotizacion.length === 0) return res.json({ success: false, message: 'Cotización no encontrada' });
+    res.json({ success: true, cotizacion: cotizacion[0], detalles });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al obtener detalle' });
   }
 });
@@ -165,7 +111,6 @@ app.delete('/cotizaciones/:id', async (req, res) => {
     await connection.end();
     res.json({ success: true, message: 'Cotización eliminada correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al eliminar cotización' });
   }
 });
@@ -175,16 +120,10 @@ app.put('/cotizaciones/:id/estado', async (req, res) => {
     const { id } = req.params;
     const { estado } = req.body;
     const connection = await createConnection();
-    
-    await connection.execute(
-      'UPDATE cotizaciones SET estado = ? WHERE id = ?',
-      [estado, id]
-    );
-    
+    await connection.execute('UPDATE cotizaciones SET estado = ? WHERE id = ?', [estado, id]);
     await connection.end();
     res.json({ success: true, message: 'Estado actualizado correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al actualizar estado' });
   }
 });
@@ -192,281 +131,134 @@ app.put('/cotizaciones/:id/estado', async (req, res) => {
 app.put('/cotizaciones/:id', async (req, res) => {
   let connection;
   try {
-    console.log('=== ACTUALIZANDO COTIZACIÓN ===');
     const { id } = req.params;
-    const { cliente_id, items, total, abono, saldo } = req.body;
-    
-    console.log('ID cotización:', id);
-    console.log('Datos recibidos:', JSON.stringify(req.body, null, 2));
-    
+    const { cliente_id, company_id, items, total, abono, saldo } = req.body;
     connection = await createConnection();
-    
-    // Actualizar cotización
     await connection.execute(
-      'UPDATE cotizaciones SET cliente_id = ?, total = ?, abono = ?, saldo = ? WHERE id = ?',
-      [cliente_id, total, abono, saldo, id]
+      'UPDATE cotizaciones SET cliente_id = ?, company_id = ?, total = ?, abono = ?, saldo = ? WHERE id = ?',
+      [cliente_id, company_id || 1, total, abono, saldo, id]
     );
-    
-    // Eliminar detalles existentes
     await connection.execute('DELETE FROM detalle_cotizaciones WHERE cotizacion_id = ?', [id]);
-    
-    // Insertar nuevos detalles
     for (const item of items) {
       await connection.execute(
         'INSERT INTO detalle_cotizaciones (cotizacion_id, producto_id, cantidad, precio_unitario, total) VALUES (?, ?, ?, ?, ?)',
         [id, item.producto_id, item.cantidad, item.precio, item.total]
       );
     }
-    
     await connection.end();
-    console.log('=== COTIZACIÓN ACTUALIZADA EXITOSAMENTE ===');
-    
     res.json({ success: true, message: 'Cotización actualizada correctamente' });
   } catch (error) {
-    console.error('=== ERROR AL ACTUALIZAR COTIZACIÓN ===');
-    console.error('Error completo:', error);
-    
-    if (connection) {
-      try {
-        await connection.end();
-      } catch (closeError) {
-        console.error('Error cerrando conexión:', closeError);
-      }
-    }
-    
+    if (connection) try { await connection.end(); } catch (e) {}
     res.json({ success: false, message: 'Error al actualizar cotización: ' + error.message });
   }
 });
 
+// Helper para obtener datos de cotización
+async function getDatosCotizacion(id) {
+  const connection = await createConnection();
+  const [cotizacion] = await connection.execute(`
+    SELECT c.*, cl.razon_social, cl.dni_ruc, cl.distrito, cl.direccion, cl.telefono,
+      co.razon_social as company_nombre, co.ruc_dni as company_ruc
+    FROM cotizaciones c 
+    JOIN clientes cl ON c.cliente_id = cl.id
+    JOIN company co ON c.company_id = co.id
+    WHERE c.id = ?
+  `, [id]);
+  if (cotizacion.length === 0) { await connection.end(); return null; }
+  const [detalles] = await connection.execute(`
+    SELECT dc.*, p.nombre as producto_nombre
+    FROM detalle_cotizaciones dc
+    JOIN productos p ON dc.producto_id = p.id
+    WHERE dc.cotizacion_id = ?
+  `, [id]);
+  const [cuentasBancarias] = await connection.execute(
+    'SELECT * FROM configuracion_bancaria WHERE activo = TRUE AND company_id = ? ORDER BY created_at ASC',
+    [cotizacion[0].company_id]
+  );
+  await connection.end();
+  console.log(`[PDF] cotizacion_id=${id} company_id=${cotizacion[0].company_id} bancos=${cuentasBancarias.length}`);
+  return { cotizacion: cotizacion[0], detalles, cuentasBancarias };
+}
+
 // Ruta para generar PDF
 app.get('/cotizaciones/:id/pdf', async (req, res) => {
-  let connection;
   let browser;
   const { id } = req.params;
-  
   try {
-    console.log('=== GENERANDO PDF ===', id);
-    
-    connection = await createConnection();
-    
-    const [cotizacion] = await connection.execute(`
-      SELECT c.*, cl.razon_social, cl.dni_ruc, cl.distrito, cl.direccion, cl.telefono,
-        co.razon_social as company_nombre, co.ruc_dni as company_ruc
-      FROM cotizaciones c 
-      JOIN clientes cl ON c.cliente_id = cl.id
-      JOIN company co ON c.company_id = co.id
-      WHERE c.id = ?
-    `, [id]);
-    
-    if (cotizacion.length === 0) {
-      await connection.end();
-      return res.status(404).send('Cotización no encontrada');
-    }
-    
-    const [detalles] = await connection.execute(`
-      SELECT dc.*, p.nombre as producto_nombre
-      FROM detalle_cotizaciones dc
-      JOIN productos p ON dc.producto_id = p.id
-      WHERE dc.cotizacion_id = ?
-    `, [id]);
-    
-    const [cuentasBancarias] = await connection.execute(`
-      SELECT * FROM configuracion_bancaria WHERE activo = TRUE AND company_id = ? ORDER BY created_at ASC
-    `, [cotizacion[0].company_id]);
-    
-    await connection.end();
-    connection = null;
-    
-    // Renderizar HTML
-    const html = await new Promise((resolve, reject) => {
-      res.app.render('cotizacion-pdf', {
-        cotizacion: cotizacion[0],
-        detalles,
-        cuentasBancarias
-      }, (err, html) => err ? reject(err) : resolve(html));
-    });
-    
-    // Construir footer HTML con cuentas bancarias
-    // IMPORTANTE: Puppeteer footerTemplate requiere font-size en px y estilos muy simples
-    let footerHtml = `<div style="width:100%; font-family:Arial,sans-serif; font-size:10px; padding:6px 15px 6px 15px; box-sizing:border-box; border-top:2px solid #007bff; background:white; -webkit-print-color-adjust:exact;">`;
-    
-    if (cuentasBancarias.length > 0) {
-      footerHtml += `<div style="color:#007bff; font-size:11px; font-weight:bold; margin-bottom:5px;">INFORMACI&Oacute;N PARA DEP&Oacute;SITO</div>`;
-      footerHtml += `<div style="display:table; width:100%; border-spacing:6px;">`;
-      cuentasBancarias.forEach(cuenta => {
-        footerHtml += `<div style="display:table-cell; border:1px solid #007bff; border-radius:4px; padding:5px 8px; background:#f0f7ff; vertical-align:top;">`;
-        footerHtml += `<div style="font-size:11px; font-weight:bold; color:#007bff; margin-bottom:3px;">${cuenta.banco} <span style="background:#17a2b8; color:white; padding:1px 4px; border-radius:2px; font-size:9px;">${cuenta.tipo_cuenta === 'ahorros' ? 'AHORROS' : 'CORRIENTE'}</span></div>`;
-        footerHtml += `<div style="font-size:10px; margin-bottom:2px;"><span style="color:#555;">N&uacute;mero:</span> <b>${cuenta.numero_cuenta}</b></div>`;
-        if (cuenta.cci) footerHtml += `<div style="font-size:10px; margin-bottom:2px;"><span style="color:#555;">CCI:</span> <b>${cuenta.cci}</b></div>`;
-        footerHtml += `<div style="font-size:10px;"><span style="color:#555;">Titular:</span> <b>${cuenta.titular}</b></div>`;
-        footerHtml += `</div>`;
-      });
-      footerHtml += `</div>`;
-    }
-    footerHtml += `</div>`;
+    const datos = await getDatosCotizacion(id);
+    if (!datos) return res.status(404).send('Cotización no encontrada');
 
-    console.log('Iniciando Chromium portable...');
-    console.log('Cuentas bancarias encontradas:', cuentasBancarias.length, JSON.stringify(cuentasBancarias));
-    console.log('Footer HTML length:', footerHtml.length);
-    
-    // Usar Chromium portable (funciona en cualquier servidor)
+    const html = await new Promise((resolve, reject) => {
+      res.app.render('cotizacion-pdf', datos, (err, html) => err ? reject(err) : resolve(html));
+    });
+
     browser = await puppeteer.launch({
       args: chromium.args,
       defaultViewport: chromium.defaultViewport,
       executablePath: await chromium.executablePath(),
       headless: chromium.headless
     });
-    
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 15000 });
-    
-    // Calcular altura del footer dinámicamente
-    const footerHeight = cuentasBancarias.length > 0 ? (cuentasBancarias.length <= 2 ? 45 : 70) : 10;
-    
     const pdf = await page.pdf({
       format: 'A4',
-      margin: {
-        top: '10mm',
-        right: '10mm',
-        bottom: `${footerHeight}mm`,
-        left: '10mm'
-      },
-      printBackground: true,
-      displayHeaderFooter: true,
-      headerTemplate: '<span></span>',
-      footerTemplate: footerHtml
+      margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' },
+      printBackground: true
     });
-    
     await browser.close();
     browser = null;
-    
-    console.log('PDF generado exitosamente:', pdf.length, 'bytes');
-    
+
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Length', pdf.length);
     res.setHeader('Content-Disposition', `inline; filename="Cotizacion-${id.toString().padStart(6, '0')}.pdf"`);
     res.setHeader('Cache-Control', 'no-cache');
     res.end(pdf);
-    
-    console.log('=== PDF ENVIADO ===');
-    
   } catch (error) {
-    console.error('=== ERROR PDF ===', error.message);
-    
-    if (browser) {
-      try { await browser.close(); } catch (e) {}
-    }
-    if (connection) {
-      try { await connection.end(); } catch (e) {}
-    }
-    
-    // Redirigir a versión HTML como respaldo
-    console.log('Redirigiendo a versión HTML...');
+    console.error('ERROR PDF:', error.message);
+    if (browser) try { await browser.close(); } catch (e) {}
     res.redirect(`/cotizaciones/${id}/pdf-simple`);
   }
 });
 
-// Ruta alternativa para PDF en móviles (sin Puppeteer)
+// Ruta alternativa para PDF en móviles
 app.get('/cotizaciones/:id/pdf-simple', async (req, res) => {
-  let connection;
-  
+  const { id } = req.params;
   try {
-    const { id } = req.params;
-    
-    connection = await createConnection();
-    
-    const [cotizacion] = await connection.execute(`
-      SELECT c.*, cl.razon_social, cl.dni_ruc, cl.distrito, cl.direccion, cl.telefono,
-        co.razon_social as company_nombre, co.ruc_dni as company_ruc
-      FROM cotizaciones c 
-      JOIN clientes cl ON c.cliente_id = cl.id
-      JOIN company co ON c.company_id = co.id
-      WHERE c.id = ?
-    `, [id]);
-    
-    if (cotizacion.length === 0) {
-      await connection.end();
-      return res.status(404).send('Cotización no encontrada');
-    }
-    
-    const [detalles] = await connection.execute(`
-      SELECT dc.*, p.nombre as producto_nombre
-      FROM detalle_cotizaciones dc
-      JOIN productos p ON dc.producto_id = p.id
-      WHERE dc.cotizacion_id = ?
-    `, [id]);
-    
-    const [cuentasBancarias] = await connection.execute(`
-      SELECT * FROM configuracion_bancaria WHERE activo = TRUE AND company_id = ? ORDER BY created_at ASC
-    `, [cotizacion[0].company_id]);
-    
-    await connection.end();
-    
-    // Renderizar template con botón de descarga via jsPDF
+    const datos = await getDatosCotizacion(id);
+    if (!datos) return res.status(404).send('Cotización no encontrada');
+
     const html = await new Promise((resolve, reject) => {
-      res.app.render('cotizacion-pdf', {
-        cotizacion: cotizacion[0],
-        detalles,
-        cuentasBancarias
-      }, (err, html) => err ? reject(err) : resolve(html));
+      res.app.render('cotizacion-pdf', datos, (err, html) => err ? reject(err) : resolve(html));
     });
-    
-    // Inyectar jsPDF + html2canvas y botón de descarga
-    const cotizacionId = cotizacion[0].id.toString().padStart(6, '0');
+
+    const cotizacionId = datos.cotizacion.id.toString().padStart(6, '0');
     const htmlFinal = html
       .replace('</head>', `
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
       <script src="/js/pdf-download.js"></script>
       <style>
-        #barra-descarga {
-          position: fixed;
-          top: 0; left: 0; right: 0;
-          background: #007bff;
-          color: white;
-          padding: 10px 20px;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          z-index: 9999;
-          font-family: Arial, sans-serif;
-          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
-        }
-        #barra-descarga span { font-size: 14px; font-weight: bold; }
-        #barra-descarga button {
-          background: white;
-          color: #007bff;
-          border: none;
-          padding: 8px 18px;
-          border-radius: 5px;
-          font-size: 14px;
-          font-weight: bold;
-          cursor: pointer;
-        }
-        #barra-descarga button:active { opacity: 0.8; }
-        body { padding-top: 55px !important; }
-        .footer { position: static !important; margin-top: 20px !important; }
-        @media print { #barra-descarga { display: none !important; } }
+        #barra-descarga { position:fixed; top:0; left:0; right:0; background:#007bff; color:white; padding:10px 20px; display:flex; justify-content:space-between; align-items:center; z-index:9999; font-family:Arial,sans-serif; box-shadow:0 2px 8px rgba(0,0,0,0.3); }
+        #barra-descarga span { font-size:14px; font-weight:bold; }
+        #barra-descarga button { background:white; color:#007bff; border:none; padding:8px 18px; border-radius:5px; font-size:14px; font-weight:bold; cursor:pointer; }
+        body { padding-top:55px !important; }
+        .footer { position:static !important; margin-top:20px !important; }
+        @media print { #barra-descarga { display:none !important; } }
       </style>
-    </head>`)
+      </head>`)
       .replace('<body>', `<body>
       <input type="hidden" id="pdf-filename" value="Cotizacion-${cotizacionId}.pdf">
       <div id="barra-descarga">
         <span>Cotización #${cotizacionId}</span>
         <button onclick="descargarPDF()" id="btnDescarga">⬇️ Descargar PDF</button>
       </div>
-      <div id="contenido-pdf">
-    `)
-      .replace('</body>', `
-      </div>
-    </body>`);
-    
+      <div id="contenido-pdf">`)
+      .replace('</body>', '</div></body>');
+
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.send(htmlFinal);
-    
   } catch (error) {
-    console.error('Error en pdf-simple:', error);
-    if (connection) try { await connection.end(); } catch (e) {}
+    console.error('Error pdf-simple:', error.message);
     res.status(500).send(`<h1>Error: ${error.message}</h1>`);
   }
 });
@@ -483,7 +275,6 @@ app.post('/configuracion-bancaria', async (req, res) => {
     await connection.end();
     res.json({ success: true, message: 'Cuenta bancaria agregada correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al agregar cuenta bancaria' });
   }
 });
@@ -500,7 +291,6 @@ app.get('/configuracion-bancaria', async (req, res) => {
     await connection.end();
     res.json(cuentas);
   } catch (error) {
-    console.error('Error:', error);
     res.json([]);
   }
 });
@@ -517,7 +307,6 @@ app.put('/configuracion-bancaria/:id', async (req, res) => {
     await connection.end();
     res.json({ success: true, message: 'Cuenta bancaria actualizada correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al actualizar cuenta bancaria' });
   }
 });
@@ -527,16 +316,10 @@ app.put('/configuracion-bancaria/:id/estado', async (req, res) => {
     const { id } = req.params;
     const { activo } = req.body;
     const connection = await createConnection();
-    
-    await connection.execute(
-      'UPDATE configuracion_bancaria SET activo = ? WHERE id = ?',
-      [activo, id]
-    );
-    
+    await connection.execute('UPDATE configuracion_bancaria SET activo = ? WHERE id = ?', [activo, id]);
     await connection.end();
     res.json({ success: true, message: 'Estado actualizado correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al actualizar estado' });
   }
 });
@@ -545,13 +328,10 @@ app.delete('/configuracion-bancaria/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const connection = await createConnection();
-    
     await connection.execute('DELETE FROM configuracion_bancaria WHERE id = ?', [id]);
-    
     await connection.end();
     res.json({ success: true, message: 'Cuenta bancaria eliminada correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al eliminar cuenta bancaria' });
   }
 });
@@ -562,13 +342,11 @@ app.get('/clientes/:id/etiquetas', async (req, res) => {
     const { id } = req.params;
     const connection = await createConnection();
     const [etiquetas] = await connection.execute(
-      'SELECT * FROM etiquetas_cliente WHERE cliente_id = ? ORDER BY created_at DESC',
-      [id]
+      'SELECT * FROM etiquetas_cliente WHERE cliente_id = ? ORDER BY created_at DESC', [id]
     );
     await connection.end();
     res.json(etiquetas);
   } catch (error) {
-    console.error('Error:', error);
     res.json([]);
   }
 });
@@ -586,7 +364,6 @@ app.post('/clientes/:id/etiquetas', upload.single('foto'), async (req, res) => {
     await connection.end();
     res.json({ success: true, message: 'Etiqueta agregada correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al agregar etiqueta' });
   }
 });
@@ -595,7 +372,6 @@ app.delete('/etiquetas/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const connection = await createConnection();
-    // Obtener foto para eliminarla del disco
     const [rows] = await connection.execute('SELECT foto FROM etiquetas_cliente WHERE id = ?', [id]);
     if (rows.length > 0 && rows[0].foto) {
       const fotoPath = path.join(__dirname, 'public', rows[0].foto);
@@ -605,7 +381,6 @@ app.delete('/etiquetas/:id', async (req, res) => {
     await connection.end();
     res.json({ success: true, message: 'Etiqueta eliminada correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al eliminar etiqueta' });
   }
 });
@@ -616,13 +391,11 @@ app.get('/productos/:id/tipos-precio', async (req, res) => {
     const { id } = req.params;
     const connection = await createConnection();
     const [tipos] = await connection.execute(
-      'SELECT * FROM tipo_precio WHERE producto_id = ? ORDER BY tipo ASC',
-      [id]
+      'SELECT * FROM tipo_precio WHERE producto_id = ? ORDER BY tipo ASC', [id]
     );
     await connection.end();
     res.json(tipos);
   } catch (error) {
-    console.error('Error:', error);
     res.json([]);
   }
 });
@@ -632,14 +405,10 @@ app.post('/productos/:id/tipos-precio', async (req, res) => {
     const { id } = req.params;
     const { tipo, precio } = req.body;
     const connection = await createConnection();
-    await connection.execute(
-      'INSERT INTO tipo_precio (producto_id, tipo, precio) VALUES (?, ?, ?)',
-      [id, tipo, precio]
-    );
+    await connection.execute('INSERT INTO tipo_precio (producto_id, tipo, precio) VALUES (?, ?, ?)', [id, tipo, precio]);
     await connection.end();
     res.json({ success: true, message: 'Tipo de precio agregado correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al agregar tipo de precio' });
   }
 });
@@ -649,14 +418,10 @@ app.put('/tipos-precio/:id', async (req, res) => {
     const { id } = req.params;
     const { tipo, precio } = req.body;
     const connection = await createConnection();
-    await connection.execute(
-      'UPDATE tipo_precio SET tipo = ?, precio = ? WHERE id = ?',
-      [tipo, precio, id]
-    );
+    await connection.execute('UPDATE tipo_precio SET tipo = ?, precio = ? WHERE id = ?', [tipo, precio, id]);
     await connection.end();
     res.json({ success: true, message: 'Tipo de precio actualizado correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al actualizar tipo de precio' });
   }
 });
@@ -669,7 +434,6 @@ app.delete('/tipos-precio/:id', async (req, res) => {
     await connection.end();
     res.json({ success: true, message: 'Tipo de precio eliminado correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al eliminar tipo de precio' });
   }
 });
@@ -683,7 +447,6 @@ app.post('/productos', async (req, res) => {
     await connection.end();
     res.json({ success: true, message: 'Producto agregado correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al agregar producto' });
   }
 });
@@ -692,23 +455,15 @@ app.get('/productos', async (req, res) => {
   try {
     const { company_id } = req.query;
     const connection = await createConnection();
-    let query = `
-      SELECT p.id, p.nombre, p.company_id, p.created_at,
-        COUNT(tp.id) as total_tipos
-      FROM productos p
-      LEFT JOIN tipo_precio tp ON p.id = tp.producto_id
-    `;
+    let query = `SELECT p.id, p.nombre, p.company_id, p.created_at, COUNT(tp.id) as total_tipos
+      FROM productos p LEFT JOIN tipo_precio tp ON p.id = tp.producto_id`;
     const params = [];
-    if (company_id) {
-      query += ' WHERE p.company_id = ?';
-      params.push(company_id);
-    }
+    if (company_id) { query += ' WHERE p.company_id = ?'; params.push(company_id); }
     query += ' GROUP BY p.id ORDER BY p.id DESC';
     const [productos] = await connection.execute(query, params);
     await connection.end();
     res.json(productos);
   } catch (error) {
-    console.error('Error:', error);
     res.json([]);
   }
 });
@@ -722,7 +477,6 @@ app.put('/productos/:id', async (req, res) => {
     await connection.end();
     res.json({ success: true, message: 'Producto actualizado correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al actualizar producto' });
   }
 });
@@ -731,13 +485,10 @@ app.delete('/productos/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const connection = await createConnection();
-    
     await connection.execute('DELETE FROM productos WHERE id = ?', [id]);
-    
     await connection.end();
     res.json({ success: true, message: 'Producto eliminado correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al eliminar producto' });
   }
 });
@@ -750,7 +501,6 @@ app.get('/company', async (req, res) => {
     await connection.end();
     res.json(companies);
   } catch (error) {
-    console.error('Error:', error);
     res.json([]);
   }
 });
@@ -763,7 +513,6 @@ app.post('/company', async (req, res) => {
     await connection.end();
     res.json({ success: true, message: 'Compañía agregada correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al agregar compañía' });
   }
 });
@@ -777,7 +526,6 @@ app.put('/company/:id', async (req, res) => {
     await connection.end();
     res.json({ success: true, message: 'Compañía actualizada correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al actualizar compañía' });
   }
 });
@@ -790,7 +538,6 @@ app.delete('/company/:id', async (req, res) => {
     await connection.end();
     res.json({ success: true, message: 'Compañía eliminada correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al eliminar compañía' });
   }
 });
@@ -807,7 +554,6 @@ app.post('/clientes', async (req, res) => {
     await connection.end();
     res.json({ success: true, message: 'Cliente agregado correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al agregar cliente' });
   }
 });
@@ -818,16 +564,12 @@ app.get('/clientes', async (req, res) => {
     const connection = await createConnection();
     let query = 'SELECT * FROM clientes';
     const params = [];
-    if (company_id) {
-      query += ' WHERE company_id = ?';
-      params.push(company_id);
-    }
+    if (company_id) { query += ' WHERE company_id = ?'; params.push(company_id); }
     query += ' ORDER BY id DESC';
     const [clientes] = await connection.execute(query, params);
     await connection.end();
     res.json(clientes);
   } catch (error) {
-    console.error('Error:', error);
     res.json([]);
   }
 });
@@ -844,7 +586,6 @@ app.put('/clientes/:id', async (req, res) => {
     await connection.end();
     res.json({ success: true, message: 'Cliente actualizado correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al actualizar cliente' });
   }
 });
@@ -853,13 +594,10 @@ app.delete('/clientes/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const connection = await createConnection();
-    
     await connection.execute('DELETE FROM clientes WHERE id = ?', [id]);
-    
     await connection.end();
     res.json({ success: true, message: 'Cliente eliminado correctamente' });
   } catch (error) {
-    console.error('Error:', error);
     res.json({ success: false, message: 'Error al eliminar cliente' });
   }
 });

@@ -502,6 +502,7 @@ function editarCliente(id) {
         document.getElementById('distrito').value = cliente.distrito;
         document.getElementById('direccion').value = cliente.direccion;
         document.getElementById('telefono').value = cliente.telefono;
+        document.getElementById('correoCliente').value = cliente.correo || '';
         document.getElementById('tituloModalCliente').innerHTML = '<i class="fas fa-user-edit"></i> Editar Cliente';
         editandoCliente = true;
         new bootstrap.Modal(document.getElementById('modalCliente')).show();

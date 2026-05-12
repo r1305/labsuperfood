@@ -545,11 +545,11 @@ app.delete('/company/:id', async (req, res) => {
 // Rutas para clientes
 app.post('/clientes', async (req, res) => {
   try {
-    const { razon_social, dni_ruc, distrito, direccion, telefono, company_id } = req.body;
+    const { razon_social, dni_ruc, distrito, direccion, telefono, correo, company_id } = req.body;
     const connection = await createConnection();
     await connection.execute(
-      'INSERT INTO clientes (razon_social, dni_ruc, distrito, direccion, telefono, company_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [razon_social, dni_ruc, distrito, direccion, telefono, company_id || 1]
+      'INSERT INTO clientes (razon_social, dni_ruc, distrito, direccion, telefono, correo, company_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [razon_social, dni_ruc, distrito, direccion, telefono, correo || null, company_id || 1]
     );
     await connection.end();
     res.json({ success: true, message: 'Cliente agregado correctamente' });
@@ -577,11 +577,11 @@ app.get('/clientes', async (req, res) => {
 app.put('/clientes/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { razon_social, dni_ruc, distrito, direccion, telefono, company_id } = req.body;
+    const { razon_social, dni_ruc, distrito, direccion, telefono, correo, company_id } = req.body;
     const connection = await createConnection();
     await connection.execute(
-      'UPDATE clientes SET razon_social = ?, dni_ruc = ?, distrito = ?, direccion = ?, telefono = ?, company_id = ? WHERE id = ?',
-      [razon_social, dni_ruc, distrito, direccion, telefono, company_id || 1, id]
+      'UPDATE clientes SET razon_social = ?, dni_ruc = ?, distrito = ?, direccion = ?, telefono = ?, correo = ?, company_id = ? WHERE id = ?',
+      [razon_social, dni_ruc, distrito, direccion, telefono, correo || null, company_id || 1, id]
     );
     await connection.end();
     res.json({ success: true, message: 'Cliente actualizado correctamente' });

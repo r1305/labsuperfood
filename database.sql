@@ -15,6 +15,7 @@ CREATE TABLE IF NOT EXISTS clientes (
     distrito VARCHAR(100) NOT NULL,
     direccion TEXT NOT NULL,
     telefono VARCHAR(20) NOT NULL,
+    correo VARCHAR(255) NULL,
     company_id INT NOT NULL DEFAULT 1,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (company_id) REFERENCES company(id)

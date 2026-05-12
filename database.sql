@@ -41,7 +41,15 @@ CREATE TABLE IF NOT EXISTS detalle_cotizaciones (
     FOREIGN KEY (producto_id) REFERENCES productos(id)
 );
 
--- Crear tabla configuracion_bancaria
+-- Crear tabla etiquetas_cliente
+CREATE TABLE IF NOT EXISTS etiquetas_cliente (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    cliente_id INT NOT NULL,
+    etiqueta VARCHAR(100) NOT NULL,
+    color VARCHAR(7) DEFAULT '#007bff',
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
+);
 CREATE TABLE IF NOT EXISTS configuracion_bancaria (
     id INT AUTO_INCREMENT PRIMARY KEY,
     banco VARCHAR(100) NOT NULL,

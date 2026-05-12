@@ -343,6 +343,10 @@ function renderTablaClientes() {
                             <td class="d-none d-md-table-cell align-middle">${c.telefono}</td>
                             <td class="text-center align-middle">
                                 <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-info" onclick="abrirEtiquetas(${c.id}, '${c.razon_social.replace(/'/g, "\\'")}')"
+                                        title="Etiquetas">
+                                        <i class="fas fa-tags"></i>
+                                    </button>
                                     <button class="btn btn-warning" onclick="editarCliente(${c.id})" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </button>
@@ -1473,6 +1477,102 @@ async function mostrarInfoBancaria() {
         console.error('Error cargando información bancaria:', error);
     }
 }
+
+// ===== FUNCIONES DE ETIQUETAS =====
+let clienteEtiquetasId = null;
+
+async function abrirEtiquetas(clienteId, clienteNombre) {
+    clienteEtiquetasId = clienteId;
+    document.getElementById('nombreClienteEtiquetas').textContent = clienteNombre;
+    document.getElementById('inputEtiqueta').value = '';
+    document.getElementById('colorEtiqueta').value = '#007bff';
+    await cargarEtiquetas();
+    new bootstrap.Modal(document.getElementById('modalEtiquetas')).show();
+}
+
+async function cargarEtiquetas() {
+    try {
+        const response = await fetch(`/clientes/${clienteEtiquetasId}/etiquetas`);
+        const etiquetas = await response.json();
+        renderEtiquetas(etiquetas);
+    } catch (error) {
+        console.error('Error cargando etiquetas:', error);
+    }
+}
+
+function renderEtiquetas(etiquetas) {
+    const container = document.getElementById('listaEtiquetasCliente');
+
+    if (etiquetas.length === 0) {
+        container.innerHTML = `
+            <div class="etiquetas-container">
+                <span class="etiquetas-vacio"><i class="fas fa-tag"></i> No hay etiquetas asignadas a este cliente</span>
+            </div>`;
+        return;
+    }
+
+    const badges = etiquetas.map(e => `
+        <span class="etiqueta-badge" style="background-color: ${e.color}">
+            ${e.etiqueta}
+            <button class="btn-eliminar-etiqueta" onclick="eliminarEtiqueta(${e.id})" title="Eliminar">
+                <i class="fas fa-times"></i>
+            </button>
+        </span>`).join('');
+
+    container.innerHTML = `<div class="etiquetas-container">${badges}</div>`;
+}
+
+async function agregarEtiqueta() {
+    const etiqueta = document.getElementById('inputEtiqueta').value.trim();
+    const color = document.getElementById('colorEtiqueta').value;
+
+    if (!etiqueta) {
+        document.getElementById('inputEtiqueta').focus();
+        return;
+    }
+
+    try {
+        const response = await fetch(`/clientes/${clienteEtiquetasId}/etiquetas`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ etiqueta, color })
+        });
+        const result = await response.json();
+        if (result.success) {
+            document.getElementById('inputEtiqueta').value = '';
+            await cargarEtiquetas();
+        } else {
+            alert(result.message);
+        }
+    } catch (error) {
+        alert('Error al agregar etiqueta');
+    }
+}
+
+async function eliminarEtiqueta(id) {
+    if (!confirm('\u00bfEliminar esta etiqueta?')) return;
+    try {
+        const response = await fetch(`/etiquetas/${id}`, { method: 'DELETE' });
+        const result = await response.json();
+        if (result.success) await cargarEtiquetas();
+    } catch (error) {
+        alert('Error al eliminar etiqueta');
+    }
+}
+
+function seleccionarColor(color) {
+    document.getElementById('colorEtiqueta').value = color;
+}
+
+// Permitir agregar etiqueta con Enter
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('inputEtiqueta') && document.getElementById('inputEtiqueta').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            agregarEtiqueta();
+        }
+    });
+});
 
 // Función para descargar PDF
 function descargarPDF(id) {

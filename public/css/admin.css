@@ -154,6 +154,65 @@ body {
     margin-top: 15px;
 }
 
+/* ===== ETIQUETAS ===== */
+.etiqueta-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    color: white;
+    margin: 3px;
+}
+
+.etiqueta-badge .btn-eliminar-etiqueta {
+    background: none;
+    border: none;
+    color: rgba(255,255,255,0.8);
+    padding: 0;
+    font-size: 11px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.etiqueta-badge .btn-eliminar-etiqueta:hover {
+    color: white;
+}
+
+.color-preset {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid transparent;
+    display: inline-block;
+    transition: transform 0.1s, border-color 0.1s;
+}
+
+.color-preset:hover {
+    transform: scale(1.2);
+    border-color: #333;
+}
+
+.etiquetas-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 10px;
+    min-height: 50px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    border: 1px solid #dee2e6;
+}
+
+.etiquetas-vacio {
+    color: #adb5bd;
+    font-size: 13px;
+    padding: 5px;
+}
+
 /* ===== PRODUCTOS GRID ===== */
 .productos-grid {
     display: grid;

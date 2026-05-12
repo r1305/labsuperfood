@@ -81,6 +81,20 @@ async function inicializarBaseDatos() {
     `);
     console.log('✅ Tabla configuracion_bancaria creada');
 
+    // Crear tabla etiquetas_cliente
+    console.log('Creando tabla etiquetas_cliente...');
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS etiquetas_cliente (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        cliente_id INT NOT NULL,
+        etiqueta VARCHAR(100) NOT NULL,
+        color VARCHAR(7) DEFAULT '#007bff',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
+      )
+    `);
+    console.log('✅ Tabla etiquetas_cliente creada');
+
     // Verificar que las tablas existen
     console.log('Verificando tablas...');
     const [tables] = await connection.execute('SHOW TABLES');

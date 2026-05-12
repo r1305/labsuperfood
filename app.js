@@ -491,6 +491,53 @@ app.delete('/configuracion-bancaria/:id', async (req, res) => {
   }
 });
 
+// Rutas para etiquetas de clientes
+app.get('/clientes/:id/etiquetas', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const connection = await createConnection();
+    const [etiquetas] = await connection.execute(
+      'SELECT * FROM etiquetas_cliente WHERE cliente_id = ? ORDER BY created_at DESC',
+      [id]
+    );
+    await connection.end();
+    res.json(etiquetas);
+  } catch (error) {
+    console.error('Error:', error);
+    res.json([]);
+  }
+});
+
+app.post('/clientes/:id/etiquetas', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { etiqueta, color } = req.body;
+    const connection = await createConnection();
+    await connection.execute(
+      'INSERT INTO etiquetas_cliente (cliente_id, etiqueta, color) VALUES (?, ?, ?)',
+      [id, etiqueta, color || '#007bff']
+    );
+    await connection.end();
+    res.json({ success: true, message: 'Etiqueta agregada correctamente' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.json({ success: false, message: 'Error al agregar etiqueta' });
+  }
+});
+
+app.delete('/etiquetas/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const connection = await createConnection();
+    await connection.execute('DELETE FROM etiquetas_cliente WHERE id = ?', [id]);
+    await connection.end();
+    res.json({ success: true, message: 'Etiqueta eliminada correctamente' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.json({ success: false, message: 'Error al eliminar etiqueta' });
+  }
+});
+
 // Rutas para productos
 app.post('/productos', async (req, res) => {
   try {

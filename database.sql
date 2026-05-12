@@ -20,12 +20,14 @@ CREATE TABLE IF NOT EXISTS clientes (
 CREATE TABLE IF NOT EXISTS cotizaciones (
     id INT AUTO_INCREMENT PRIMARY KEY,
     cliente_id INT NOT NULL,
+    company_id INT NOT NULL DEFAULT 1,
     total DECIMAL(10,2) NOT NULL,
     abono DECIMAL(10,2) DEFAULT 0,
     saldo DECIMAL(10,2) NOT NULL,
     estado ENUM('pendiente', 'pagado', 'cancelado') DEFAULT 'pendiente',
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (cliente_id) REFERENCES clientes(id)
+    FOREIGN KEY (cliente_id) REFERENCES clientes(id),
+    FOREIGN KEY (company_id) REFERENCES company(id)
 );
 
 -- Crear tabla detalle_cotizaciones

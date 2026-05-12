@@ -42,7 +42,7 @@ app.post('/cotizaciones', async (req, res) => {
     console.log('=== GUARDANDO COTIZACIÓN ===');
     console.log('Datos recibidos:', JSON.stringify(req.body, null, 2));
     
-    const { cliente_id, items, total, abono, saldo } = req.body;
+    const { cliente_id, company_id, items, total, abono, saldo } = req.body;
     
     // Validaciones
     if (!cliente_id) {
@@ -62,8 +62,8 @@ app.post('/cotizaciones', async (req, res) => {
     // Insertar cotización
     console.log('Insertando cotización...');
     const [result] = await connection.execute(
-      'INSERT INTO cotizaciones (cliente_id, total, abono, saldo) VALUES (?, ?, ?, ?)',
-      [cliente_id, total, abono, saldo]
+      'INSERT INTO cotizaciones (cliente_id, company_id, total, abono, saldo) VALUES (?, ?, ?, ?, ?)',
+      [cliente_id, company_id || 1, total, abono, saldo]
     );
     
     const cotizacionId = result.insertId;
@@ -250,9 +250,11 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
     connection = await createConnection();
     
     const [cotizacion] = await connection.execute(`
-      SELECT c.*, cl.razon_social, cl.dni_ruc, cl.distrito, cl.direccion, cl.telefono
+      SELECT c.*, cl.razon_social, cl.dni_ruc, cl.distrito, cl.direccion, cl.telefono,
+        co.razon_social as company_nombre, co.ruc_dni as company_ruc
       FROM cotizaciones c 
-      JOIN clientes cl ON c.cliente_id = cl.id 
+      JOIN clientes cl ON c.cliente_id = cl.id
+      JOIN company co ON c.company_id = co.id
       WHERE c.id = ?
     `, [id]);
     
@@ -375,9 +377,11 @@ app.get('/cotizaciones/:id/pdf-simple', async (req, res) => {
     connection = await createConnection();
     
     const [cotizacion] = await connection.execute(`
-      SELECT c.*, cl.razon_social, cl.dni_ruc, cl.distrito, cl.direccion, cl.telefono
+      SELECT c.*, cl.razon_social, cl.dni_ruc, cl.distrito, cl.direccion, cl.telefono,
+        co.razon_social as company_nombre, co.ruc_dni as company_ruc
       FROM cotizaciones c 
-      JOIN clientes cl ON c.cliente_id = cl.id 
+      JOIN clientes cl ON c.cliente_id = cl.id
+      JOIN company co ON c.company_id = co.id
       WHERE c.id = ?
     `, [id]);
     

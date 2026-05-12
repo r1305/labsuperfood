@@ -63,7 +63,13 @@
                             <div class="card-body">
                                 <!-- Selección de Cliente -->
                                 <div class="row mb-3">
-                                    <div class="col-lg-6 col-md-12 mb-3">
+                                    <div class="col-lg-4 col-md-6 col-12 mb-3">
+                                        <label class="form-label"><i class="fas fa-building"></i> Compañía</label>
+                                        <select class="form-select" id="selectCompanyCotizacion">
+                                            <option value="1">Cargando...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-lg-4 col-md-6 col-12 mb-3">
                                         <label class="form-label"><i class="fas fa-search"></i> Buscar Cliente</label>
                                         <div class="input-group">
                                             <input type="text" class="form-control" id="buscarClienteCotizacion" placeholder="Buscar por razón social, DNI/RUC...">
@@ -74,7 +80,7 @@
                                         <select class="form-select mt-2" id="selectCliente" size="4" style="display:none;">
                                         </select>
                                     </div>
-                                    <div class="col-lg-6 col-md-12">
+                                    <div class="col-lg-4 col-md-12">
                                         <div id="datosClienteSeleccionado" class="cliente-info" style="display:none;">
                                             <h6><i class="fas fa-user-check"></i> Cliente Seleccionado:</h6>
                                             <div id="infoCliente"></div>

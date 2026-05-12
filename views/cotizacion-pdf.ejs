@@ -211,8 +211,8 @@ function formatearNumeroPDF(monto) {
 <body>
     <div class="main-content">
     <div class="header">
-        <div class="company-name">Maquila Lima Lab</div>
-        <div style="font-size: 12px; color: #666; margin-bottom: 3px;">RUC 20607583677</div>
+        <div class="company-name"><%= cotizacion.company_nombre %></div>
+        <div style="font-size: 12px; color: #666; margin-bottom: 3px;">RUC <%= cotizacion.company_ruc %></div>
         <div class="document-title">COTIZACIÓN</div>
         <div>N° <%= cotizacion.id.toString().padStart(6, '0') %></div>
     </div>

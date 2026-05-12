@@ -45,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
     cargarCotizaciones();
     cargarCuentasBancarias();
     cargarCompany();
+    cargarCompanyEnCotizacion();
 
     // Inicializar cotización
     inicializarCotizacion();
@@ -982,13 +983,15 @@ function guardarCotizacion() {
     const total = itemsCotizacion.reduce((sum, item) => sum + item.total, 0);
     const abono = parseFloat(document.getElementById('abono').value) || 0;
     const saldo = total - abono;
+    const company_id = parseInt(document.getElementById('selectCompanyCotizacion').value) || 1;
     
     const cotizacionData = {
         cliente_id: clienteSeleccionado.id,
+        company_id,
         items: itemsCotizacion,
-        total: total,
-        abono: abono,
-        saldo: saldo
+        total,
+        abono,
+        saldo
     };
     
     // Determinar URL y método
@@ -1714,6 +1717,22 @@ async function cargarTiposPrecioEnCotizacion(productoId) {
     } catch (error) {
         console.error('Error cargando tipos de precio:', error);
         colTipo.style.display = 'none';
+    }
+}
+
+async function cargarCompanyEnCotizacion() {
+    try {
+        const response = await fetch('/company');
+        const companies = await response.json();
+        const select = document.getElementById('selectCompanyCotizacion');
+        select.innerHTML = companies.map(c =>
+            `<option value="${c.id}">${c.razon_social} (${c.ruc_dni})</option>`
+        ).join('');
+        if (companies.length === 0) {
+            select.innerHTML = '<option value="1">Sin compañías</option>';
+        }
+    } catch (error) {
+        console.error('Error cargando compañías:', error);
     }
 }
 

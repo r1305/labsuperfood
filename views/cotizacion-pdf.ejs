@@ -269,7 +269,7 @@ function formatearNumeroPDF(monto) {
             <% detalles.forEach(detalle => { %>
             <tr>
                 <td style="width: 35%; line-height: 1.1; max-height: 2.2em; overflow: hidden; vertical-align: middle;"><%= detalle.producto_nombre %></td>
-                <td style="width: 13%; text-align: center; vertical-align: middle;"><%= formatearNumeroPDF(detalle.cantidad) %></td>
+                <td style="width: 13%; text-align: center; vertical-align: middle;"><%= parseInt(detalle.cantidad) %></td>
                 <td style="width: 13%; text-align: center; vertical-align: middle;"><%= formatearMonedaPDF(detalle.precio_unitario) %></td>
                 <td style="width: 13%; text-align: center; vertical-align: middle;"><%= formatearMonedaPDF(detalle.total) %></td>
                 <td style="width: 13%; text-align: center; vertical-align: middle;"><%= formatearMonedaPDF(detalle.total) %></td>

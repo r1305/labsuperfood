@@ -224,16 +224,20 @@ function renderTablaProductos() {
                     <tr>
                         <th class="text-center">#</th>
                         <th>Nombre</th>
-                        <th class="text-center" style="min-width:120px;">Precio</th>
-                        <th class="text-center" style="min-width:90px;">Acciones</th>
+                        <th class="text-center" style="min-width:100px;">Tipos de Precio</th>
+                        <th class="text-center" style="min-width:120px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
                     ${paginaData.map((p, i) => `
                         <tr>
-                            <td class="text-muted align-middle">${inicio + i + 1}</td>
+                            <td class="text-center align-middle text-muted">${inicio + i + 1}</td>
                             <td class="align-middle">${p.nombre}</td>
-                            <td class="text-center align-middle fw-bold text-primary">${formatearMoneda(p.precio)}</td>
+                            <td class="text-center align-middle">
+                                <span class="badge ${p.total_tipos > 0 ? 'bg-success' : 'bg-secondary'}">
+                                    ${p.total_tipos} tipo${p.total_tipos !== 1 ? 's' : ''}
+                                </span>
+                            </td>
                             <td class="text-center align-middle">
                                 <div class="btn-group btn-group-sm">
                                     <button class="btn btn-info" onclick="abrirTiposPrecio(${p.id}, '${p.nombre.replace(/'/g, "\\'")}')"
@@ -427,7 +431,6 @@ function editarProducto(id) {
     if (producto) {
         document.getElementById('productoId').value = producto.id;
         document.getElementById('nombreProducto').value = producto.nombre;
-        document.getElementById('precioProducto').value = producto.precio;
         document.getElementById('tituloModalProducto').innerHTML = '<i class="fas fa-edit"></i> Editar Producto';
         editandoProducto = true;
         new bootstrap.Modal(document.getElementById('modalProducto')).show();
@@ -735,7 +738,7 @@ function mostrarSelectProductos(productosFiltrados, select) {
     productosFiltrados.forEach(producto => {
         const option = document.createElement('option');
         option.value = producto.id;
-        option.textContent = `${producto.nombre} - ${formatearMoneda(producto.precio)}`;
+        option.textContent = `${producto.nombre}`;
         option.dataset.producto = JSON.stringify(producto);
         select.appendChild(option);
     });
@@ -766,7 +769,6 @@ function mostrarListaMobileProductos(productosFiltrados) {
         item.className = 'mobile-list-item';
         item.innerHTML = `
             <div><strong>${producto.nombre}</strong></div>
-            <div class="text-muted small">${formatearMoneda(producto.precio)}</div>
         `;
         
         // Eventos táctiles
@@ -788,14 +790,14 @@ function mostrarListaMobileProductos(productosFiltrados) {
 function seleccionarProducto(producto) {
     productoSeleccionado = producto;
     document.getElementById('buscarProductoCotizacion').value = producto.nombre;
-    document.getElementById('precioProductoSeleccionado').value = parseFloat(producto.precio).toFixed(2);
+    document.getElementById('precioProductoSeleccionado').value = '0.00';
     document.getElementById('selectProducto').style.display = 'none';
     
     // Ocultar lista móvil si existe
     ocultarListaMobile('listaProductosMobile');
     
     // Cargar tipos de precio
-    cargarTiposPrecioEnCotizacion(producto.id, producto.precio);
+    cargarTiposPrecioEnCotizacion(producto.id);
     
     document.getElementById('cantidadProducto').focus();
     calcularTotalProducto();
@@ -1628,7 +1630,7 @@ async function eliminarTipoPrecio(id) {
 }
 
 // Cargar tipos de precio al seleccionar un producto en cotización
-async function cargarTiposPrecioEnCotizacion(productoId, precioBase) {
+async function cargarTiposPrecioEnCotizacion(productoId) {
     const colTipo = document.getElementById('colTipoPrecio');
     const selectTipo = document.getElementById('selectTipoPrecio');
 
@@ -1636,7 +1638,7 @@ async function cargarTiposPrecioEnCotizacion(productoId, precioBase) {
         const response = await fetch(`/productos/${productoId}/tipos-precio`);
         const tipos = await response.json();
 
-        selectTipo.innerHTML = `<option value="" data-precio="${precioBase}">-- Precio base (${formatearMoneda(precioBase)}) --</option>`;
+        selectTipo.innerHTML = '<option value="">-- Seleccionar tipo --</option>';
 
         if (tipos.length > 0) {
             tipos.forEach(t => {
@@ -1647,6 +1649,12 @@ async function cargarTiposPrecioEnCotizacion(productoId, precioBase) {
                 selectTipo.appendChild(opt);
             });
             colTipo.style.display = 'block';
+            // Auto-seleccionar el primero y cargar su precio
+            if (tipos.length === 1) {
+                selectTipo.selectedIndex = 1;
+                document.getElementById('precioProductoSeleccionado').value = parseFloat(tipos[0].precio).toFixed(2);
+                calcularTotalProducto();
+            }
         } else {
             colTipo.style.display = 'none';
         }

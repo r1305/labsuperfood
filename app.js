@@ -641,14 +641,9 @@ app.delete('/tipos-precio/:id', async (req, res) => {
 // Rutas para productos
 app.post('/productos', async (req, res) => {
   try {
-    const { nombre, precio } = req.body;
+    const { nombre } = req.body;
     const connection = await createConnection();
-    
-    await connection.execute(
-      'INSERT INTO productos (nombre, precio) VALUES (?, ?)',
-      [nombre, precio]
-    );
-    
+    await connection.execute('INSERT INTO productos (nombre) VALUES (?)', [nombre]);
     await connection.end();
     res.json({ success: true, message: 'Producto agregado correctamente' });
   } catch (error) {
@@ -660,7 +655,14 @@ app.post('/productos', async (req, res) => {
 app.get('/productos', async (req, res) => {
   try {
     const connection = await createConnection();
-    const [productos] = await connection.execute('SELECT * FROM productos ORDER BY id DESC');
+    const [productos] = await connection.execute(`
+      SELECT p.id, p.nombre, p.created_at,
+        COUNT(tp.id) as total_tipos
+      FROM productos p
+      LEFT JOIN tipo_precio tp ON p.id = tp.producto_id
+      GROUP BY p.id
+      ORDER BY p.id DESC
+    `);
     await connection.end();
     res.json(productos);
   } catch (error) {
@@ -672,14 +674,9 @@ app.get('/productos', async (req, res) => {
 app.put('/productos/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre, precio } = req.body;
+    const { nombre } = req.body;
     const connection = await createConnection();
-    
-    await connection.execute(
-      'UPDATE productos SET nombre = ?, precio = ? WHERE id = ?',
-      [nombre, precio, id]
-    );
-    
+    await connection.execute('UPDATE productos SET nombre = ? WHERE id = ?', [nombre, id]);
     await connection.end();
     res.json({ success: true, message: 'Producto actualizado correctamente' });
   } catch (error) {

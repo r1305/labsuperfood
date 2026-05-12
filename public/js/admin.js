@@ -118,10 +118,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Formulario de clientes
-    document.getElementById('formCliente').addEventListener('submit', async function(e) {
-        e.preventDefault();
+    document.getElementById('btnGuardarCliente').addEventListener('click', async function() {
+        const form = document.getElementById('formCliente');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
         
-        const formData = new FormData(this);
+        const formData = new FormData(form);
         const data = Object.fromEntries(formData);
         
         try {
@@ -129,17 +133,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (editandoCliente) {
                 response = await fetch(`/clientes/${data.id}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
             } else {
                 response = await fetch('/clientes', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
             }
@@ -147,15 +147,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
             
             if (result.success) {
-                mostrarAlerta(result.message, 'success', 'clientes');
-                this.reset();
+                bootstrap.Modal.getInstance(document.getElementById('modalCliente')).hide();
                 cancelarEdicionCliente();
                 cargarClientes();
             } else {
-                mostrarAlerta(result.message, 'danger', 'clientes');
+                alert(result.message);
             }
         } catch (error) {
-            mostrarAlerta('Error al procesar cliente', 'danger', 'clientes');
+            alert('Error al procesar cliente');
         }
     });
 });
@@ -285,53 +284,114 @@ function abrirModalProducto() {
     new bootstrap.Modal(document.getElementById('modalProducto')).show();
 }
 
+// ===== VARIABLES DE PAGINACIÓN CLIENTES =====
+let paginaActualClientes = 1;
+const clientesPorPagina = 10;
+let clientesFiltrados = [];
+
 function mostrarClientes(clientes) {
+    clientesFiltrados = clientes;
+    paginaActualClientes = 1;
+    renderTablaClientes();
+}
+
+function renderTablaClientes() {
     const lista = document.getElementById('listaClientes');
     const contador = document.getElementById('contadorClientes');
-    lista.innerHTML = '';
-    
-    if (contador) contador.textContent = clientes.length;
-    
-    if (clientes.length === 0) {
+    const paginacion = document.getElementById('paginacionClientes');
+
+    if (contador) contador.textContent = clientesFiltrados.length;
+
+    if (clientesFiltrados.length === 0) {
         lista.innerHTML = `
             <div class="text-center py-4 text-muted">
                 <i class="fas fa-users fa-3x mb-3 d-block"></i>
                 <p class="mb-0">No hay clientes registrados</p>
-                <small>Agrega tu primer cliente usando el formulario</small>
+                <small>Haz clic en "Nuevo Cliente" para agregar uno</small>
             </div>`;
+        paginacion.innerHTML = '';
         return;
     }
-    
-    const grid = document.createElement('div');
-    grid.className = 'clientes-grid';
-    
-    clientes.forEach(cliente => {
-        const card = document.createElement('div');
-        card.className = 'cliente-card';
-        card.innerHTML = `
-            <div class="cliente-card-body">
-                <div class="cliente-info-card">
-                    <div class="cliente-nombre">${cliente.razon_social}</div>
-                    <div class="cliente-detalle">
-                        <span><i class="fas fa-id-card"></i> ${cliente.dni_ruc}</span>
-                        <span><i class="fas fa-map-marker-alt"></i> ${cliente.distrito}</span>
-                        <span><i class="fas fa-phone"></i> ${cliente.telefono}</span>
-                    </div>
-                </div>
-                <div class="cliente-acciones">
-                    <button class="btn btn-warning btn-sm" onclick="editarCliente(${cliente.id})" title="Editar">
-                        <i class="fas fa-edit"></i>
-                    </button>
-                    <button class="btn btn-danger btn-sm" onclick="eliminarCliente(${cliente.id})" title="Eliminar">
-                        <i class="fas fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `;
-        grid.appendChild(card);
-    });
-    
-    lista.appendChild(grid);
+
+    const totalPaginas = Math.ceil(clientesFiltrados.length / clientesPorPagina);
+    const inicio = (paginaActualClientes - 1) * clientesPorPagina;
+    const fin = inicio + clientesPorPagina;
+    const paginaData = clientesFiltrados.slice(inicio, fin);
+
+    lista.innerHTML = `
+        <div class="table-responsive mobile-scroll">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>#</th>
+                        <th style="min-width:150px;">Razón Social</th>
+                        <th style="min-width:110px;">DNI/RUC</th>
+                        <th class="d-none d-md-table-cell" style="min-width:100px;">Distrito</th>
+                        <th class="d-none d-lg-table-cell" style="min-width:150px;">Dirección</th>
+                        <th class="d-none d-md-table-cell" style="min-width:100px;">Teléfono</th>
+                        <th class="text-center" style="min-width:90px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${paginaData.map((c, i) => `
+                        <tr>
+                            <td class="text-muted align-middle">${inicio + i + 1}</td>
+                            <td class="align-middle fw-semibold">${c.razon_social}</td>
+                            <td class="align-middle">${c.dni_ruc}</td>
+                            <td class="d-none d-md-table-cell align-middle">${c.distrito}</td>
+                            <td class="d-none d-lg-table-cell align-middle text-muted">${c.direccion}</td>
+                            <td class="d-none d-md-table-cell align-middle">${c.telefono}</td>
+                            <td class="text-center align-middle">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-warning" onclick="editarCliente(${c.id})" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn btn-danger" onclick="eliminarCliente(${c.id})" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+
+    if (totalPaginas <= 1) {
+        paginacion.innerHTML = `<small class="text-muted">Mostrando ${clientesFiltrados.length} cliente(s)</small>`;
+        return;
+    }
+
+    let btnsPaginas = '';
+    for (let i = 1; i <= totalPaginas; i++) {
+        btnsPaginas += `<button class="btn btn-sm ${i === paginaActualClientes ? 'btn-primary' : 'btn-outline-secondary'}" onclick="cambiarPaginaClientes(${i})">${i}</button>`;
+    }
+
+    paginacion.innerHTML = `
+        <small class="text-muted">Mostrando ${inicio + 1}-${Math.min(fin, clientesFiltrados.length)} de ${clientesFiltrados.length}</small>
+        <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary" onclick="cambiarPaginaClientes(${paginaActualClientes - 1})" ${paginaActualClientes === 1 ? 'disabled' : ''}>
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            ${btnsPaginas}
+            <button class="btn btn-outline-secondary" onclick="cambiarPaginaClientes(${paginaActualClientes + 1})" ${paginaActualClientes === totalPaginas ? 'disabled' : ''}>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>`;
+}
+
+function cambiarPaginaClientes(pagina) {
+    const totalPaginas = Math.ceil(clientesFiltrados.length / clientesPorPagina);
+    if (pagina < 1 || pagina > totalPaginas) return;
+    paginaActualClientes = pagina;
+    renderTablaClientes();
+}
+
+function abrirModalCliente() {
+    document.getElementById('formCliente').reset();
+    document.getElementById('clienteId').value = '';
+    document.getElementById('tituloModalCliente').innerHTML = '<i class="fas fa-user-plus"></i> Nuevo Cliente';
+    editandoCliente = false;
+    new bootstrap.Modal(document.getElementById('modalCliente')).show();
 }
 
 function filtrarProductos(termino) {
@@ -342,12 +402,12 @@ function filtrarProductos(termino) {
 }
 
 function filtrarClientes(termino) {
-    const clientesFiltrados = clientesData.filter(cliente => 
+    const filtrados = clientesData.filter(cliente => 
         cliente.razon_social.toLowerCase().includes(termino.toLowerCase()) ||
         cliente.dni_ruc.includes(termino) ||
         cliente.distrito.toLowerCase().includes(termino.toLowerCase())
     );
-    mostrarClientes(clientesFiltrados);
+    mostrarClientes(filtrados);
 }
 
 function editarProducto(id) {
@@ -371,11 +431,9 @@ function editarCliente(id) {
         document.getElementById('distrito').value = cliente.distrito;
         document.getElementById('direccion').value = cliente.direccion;
         document.getElementById('telefono').value = cliente.telefono;
-        document.getElementById('tituloFormCliente').innerHTML = '<i class="fas fa-user-edit"></i> Editar Cliente';
-        document.getElementById('btnCliente').innerHTML = '<i class="fas fa-save"></i> Actualizar Cliente';
-        document.getElementById('btnCancelarCliente').style.display = 'block';
+        document.getElementById('tituloModalCliente').innerHTML = '<i class="fas fa-user-edit"></i> Editar Cliente';
         editandoCliente = true;
-        document.getElementById('formCliente').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        new bootstrap.Modal(document.getElementById('modalCliente')).show();
     }
 }
 
@@ -386,9 +444,6 @@ function cancelarEdicionProducto() {
 
 function cancelarEdicionCliente() {
     document.getElementById('formCliente').reset();
-    document.getElementById('tituloFormCliente').innerHTML = '<i class="fas fa-user-plus"></i> Agregar Cliente';
-    document.getElementById('btnCliente').innerHTML = '<i class="fas fa-save"></i> Guardar Cliente';
-    document.getElementById('btnCancelarCliente').style.display = 'none';
     editandoCliente = false;
 }
 

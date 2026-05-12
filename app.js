@@ -215,16 +215,12 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
   
   try {
     const { id } = req.params;
-    console.log('Generando PDF para cotización:', id);
-    
-    // Configurar headers antes de cualquier operación
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `inline; filename="Cotizacion-${id.toString().padStart(6, '0')}.pdf"`);
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
+    console.log('=== GENERANDO PDF ===');
+    console.log('ID Cotización:', id);
+    console.log('User-Agent:', req.headers['user-agent']);
     
     connection = await createConnection();
+    console.log('Conexión a BD establecida');
     
     // Obtener cotización con cliente
     const [cotizacion] = await connection.execute(`
@@ -236,9 +232,13 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
     
     if (cotizacion.length === 0) {
       console.log('Cotización no encontrada:', id);
+      await connection.end();
       res.status(404);
+      res.setHeader('Content-Type', 'text/plain');
       return res.end('Cotización no encontrada');
     }
+    
+    console.log('Cotización encontrada:', cotizacion[0].id);
     
     // Obtener detalles
     const [detalles] = await connection.execute(`
@@ -248,10 +248,14 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
       WHERE dc.cotizacion_id = ?
     `, [id]);
     
+    console.log('Detalles encontrados:', detalles.length);
+    
     // Obtener cuentas bancarias activas
     const [cuentasBancarias] = await connection.execute(`
       SELECT * FROM configuracion_bancaria WHERE activo = TRUE ORDER BY created_at ASC
     `);
+    
+    console.log('Cuentas bancarias:', cuentasBancarias.length);
     
     await connection.end();
     connection = null;
@@ -268,34 +272,55 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
           console.error('Error renderizando template:', err);
           reject(err);
         } else {
+          console.log('HTML renderizado exitosamente, longitud:', html.length);
           resolve(html);
         }
       });
     });
     
-    // Generar PDF
-    console.log('Iniciando puppeteer...');
-    browser = await puppeteer.launch({
+    // Detectar si es móvil para ajustar configuración de Puppeteer
+    const userAgent = req.headers['user-agent'] || '';
+    const esMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    
+    console.log('Es móvil:', esMobile);
+    console.log('Iniciando Puppeteer...');
+    
+    // Configuración de Puppeteer optimizada
+    const puppeteerConfig = {
       headless: 'new',
       args: [
-        '--no-sandbox', 
+        '--no-sandbox',
         '--disable-setuid-sandbox',
         '--disable-dev-shm-usage',
         '--disable-gpu',
         '--no-first-run',
         '--no-zygote',
-        '--single-process'
+        '--disable-background-timer-throttling',
+        '--disable-backgrounding-occluded-windows',
+        '--disable-renderer-backgrounding'
       ]
-    });
+    };
+    
+    // Para móviles, usar configuración más simple
+    if (esMobile) {
+      puppeteerConfig.args = ['--no-sandbox', '--disable-setuid-sandbox'];
+    }
+    
+    browser = await puppeteer.launch(puppeteerConfig);
+    console.log('Puppeteer iniciado');
     
     const page = await browser.newPage();
+    console.log('Nueva página creada');
     
     // Configurar página
     await page.setViewport({ width: 1200, height: 800 });
+    console.log('Viewport configurado');
+    
     await page.setContent(html, { 
-      waitUntil: ['networkidle0', 'domcontentloaded'],
-      timeout: 30000
+      waitUntil: 'domcontentloaded',
+      timeout: 15000
     });
+    console.log('Contenido HTML cargado');
     
     console.log('Generando PDF...');
     const pdf = await page.pdf({
@@ -307,7 +332,8 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
         left: '10mm'
       },
       printBackground: true,
-      preferCSSPageSize: true
+      preferCSSPageSize: true,
+      timeout: 15000
     });
     
     await browser.close();
@@ -315,20 +341,106 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
     
     console.log('PDF generado exitosamente, tamaño:', pdf.length, 'bytes');
     
-    // Enviar PDF
+    // Configurar headers y enviar PDF
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Length', pdf.length);
+    res.setHeader('Content-Disposition', `inline; filename="Cotizacion-${id.toString().padStart(6, '0')}.pdf"`);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     res.end(pdf);
+    console.log('=== PDF ENVIADO EXITOSAMENTE ===');
     
   } catch (error) {
-    console.error('Error generando PDF:', error);
-    console.error('Stack trace:', error.stack);
+    console.error('=== ERROR GENERANDO PDF ===');
+    console.error('Error:', error.message);
+    console.error('Stack:', error.stack);
     
     if (browser) {
       try {
+        console.log('Cerrando browser...');
         await browser.close();
       } catch (closeError) {
         console.error('Error cerrando browser:', closeError);
       }
     }
+    
+    if (connection) {
+      try {
+        console.log('Cerrando conexión BD...');
+        await connection.end();
+      } catch (closeError) {
+        console.error('Error cerrando conexión:', closeError);
+      }
+    }
+    
+    // Enviar error detallado
+    if (!res.headersSent) {
+      res.status(500);
+      res.setHeader('Content-Type', 'text/plain');
+      res.end(`Error generando PDF: ${error.message}`);
+    }
+    
+    console.log('=== FIN ERROR PDF ===');
+  }
+});
+
+// Ruta alternativa para PDF en móviles (sin Puppeteer)
+app.get('/cotizaciones/:id/pdf-simple', async (req, res) => {
+  let connection;
+  
+  try {
+    const { id } = req.params;
+    console.log('=== GENERANDO PDF SIMPLE PARA MÓVIL ===');
+    console.log('ID Cotización:', id);
+    
+    connection = await createConnection();
+    
+    // Obtener cotización con cliente
+    const [cotizacion] = await connection.execute(`
+      SELECT c.*, cl.razon_social, cl.dni_ruc, cl.distrito, cl.direccion, cl.telefono
+      FROM cotizaciones c 
+      JOIN clientes cl ON c.cliente_id = cl.id 
+      WHERE c.id = ?
+    `, [id]);
+    
+    if (cotizacion.length === 0) {
+      await connection.end();
+      res.status(404);
+      res.setHeader('Content-Type', 'text/html');
+      return res.end('<h1>Cotización no encontrada</h1>');
+    }
+    
+    // Obtener detalles
+    const [detalles] = await connection.execute(`
+      SELECT dc.*, p.nombre as producto_nombre
+      FROM detalle_cotizaciones dc
+      JOIN productos p ON dc.producto_id = p.id
+      WHERE dc.cotizacion_id = ?
+    `, [id]);
+    
+    // Obtener cuentas bancarias activas
+    const [cuentasBancarias] = await connection.execute(`
+      SELECT * FROM configuracion_bancaria WHERE activo = TRUE ORDER BY created_at ASC
+    `);
+    
+    await connection.end();
+    
+    // Renderizar HTML directamente (sin PDF)
+    res.setHeader('Content-Type', 'text/html');
+    res.setHeader('Cache-Control', 'no-cache');
+    
+    res.render('cotizacion-pdf', {
+      cotizacion: cotizacion[0],
+      detalles: detalles,
+      cuentasBancarias: cuentasBancarias
+    });
+    
+    console.log('=== HTML SIMPLE ENVIADO ===');
+    
+  } catch (error) {
+    console.error('Error en PDF simple:', error);
     
     if (connection) {
       try {
@@ -338,12 +450,9 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
       }
     }
     
-    // Si ya se enviaron headers, no podemos enviar JSON
-    if (!res.headersSent) {
-      res.status(500);
-      res.setHeader('Content-Type', 'text/plain');
-      res.end('Error interno del servidor al generar PDF');
-    }
+    res.status(500);
+    res.setHeader('Content-Type', 'text/html');
+    res.end(`<h1>Error: ${error.message}</h1>`);
   }
 });
 

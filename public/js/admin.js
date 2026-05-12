@@ -1322,47 +1322,70 @@ function descargarPDF(id) {
     const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     
     const url = `/cotizaciones/${id}/pdf`;
+    const urlSimple = `/cotizaciones/${id}/pdf-simple`;
     const filename = `Cotizacion-${id.toString().padStart(6, '0')}.pdf`;
     
     if (esMobile) {
-        // Para móviles: usar diferentes estrategias según el dispositivo
-        if (esIOS) {
-            // iOS: abrir en nueva ventana
-            const newWindow = window.open(url, '_blank');
-            if (!newWindow) {
-                alert('Por favor, permite las ventanas emergentes para descargar el PDF');
-            }
-        } else {
-            // Android y otros móviles: intentar descarga directa primero
-            try {
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = filename;
-                link.target = '_blank';
-                link.rel = 'noopener noreferrer';
-                
-                // Agregar al DOM temporalmente
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-                
-                // Si no funciona, abrir en nueva ventana como respaldo
-                setTimeout(() => {
-                    window.open(url, '_blank');
-                }, 1000);
-            } catch (error) {
-                console.log('Descarga directa falló, usando ventana nueva');
-                window.open(url, '_blank');
-            }
-        }
+        console.log('Dispositivo móvil detectado, intentando descarga...');
         
-        // Restaurar botón rápidamente en móviles
-        setTimeout(() => {
-            btn.innerHTML = iconoOriginal;
-            btn.disabled = false;
-        }, 1500);
+        // Para móviles: intentar PDF primero, luego HTML como respaldo
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/pdf'
+            }
+        })
+        .then(response => {
+            console.log('Respuesta recibida:', response.status, response.headers.get('content-type'));
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const contentType = response.headers.get('content-type');
+            if (contentType && contentType.includes('application/pdf')) {
+                // Es un PDF válido
+                return response.blob().then(blob => {
+                    if (blob.size === 0) {
+                        throw new Error('PDF vacío');
+                    }
+                    
+                    // Crear URL y abrir
+                    const blobUrl = URL.createObjectURL(blob);
+                    window.open(blobUrl, '_blank');
+                    
+                    // Limpiar después de un tiempo
+                    setTimeout(() => {
+                        URL.revokeObjectURL(blobUrl);
+                    }, 10000);
+                    
+                    console.log('PDF abierto exitosamente');
+                });
+            } else {
+                // No es PDF, probablemente un error
+                throw new Error('Respuesta no es PDF');
+            }
+        })
+        .catch(error => {
+            console.log('Error con PDF, intentando versión HTML:', error.message);
+            
+            // Como respaldo, abrir versión HTML
+            window.open(urlSimple, '_blank');
+            
+            // Mostrar mensaje al usuario
+            setTimeout(() => {
+                alert('Se abrió la cotización en formato web. Puedes usar la opción "Imprimir" de tu navegador para guardarla como PDF.');
+            }, 1000);
+        })
+        .finally(() => {
+            // Restaurar botón
+            setTimeout(() => {
+                btn.innerHTML = iconoOriginal;
+                btn.disabled = false;
+            }, 1500);
+        });
     } else {
-        // Para desktop: usar fetch para mejor control
+        // Para desktop: usar fetch con mejor control
         fetch(url, {
             method: 'GET',
             headers: {

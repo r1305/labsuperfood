@@ -348,9 +348,12 @@ app.get('/cotizaciones/:id/pdf-simple', async (req, res) => {
     });
     
     // Inyectar jsPDF + html2canvas y botón de descarga
-    const htmlFinal = html.replace('</head>', `
+    const cotizacionId = cotizacion[0].id.toString().padStart(6, '0');
+    const htmlFinal = html
+      .replace('</head>', `
       <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
       <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      <script src="/js/pdf-download.js"></script>
       <style>
         #barra-descarga {
           position: fixed;
@@ -378,83 +381,20 @@ app.get('/cotizaciones/:id/pdf-simple', async (req, res) => {
         }
         #barra-descarga button:active { opacity: 0.8; }
         body { padding-top: 55px !important; }
+        .footer { position: static !important; margin-top: 20px !important; }
         @media print { #barra-descarga { display: none !important; } }
       </style>
-    </head>`).replace('<body>', `<body>
+    </head>`)
+      .replace('<body>', `<body>
+      <input type="hidden" id="pdf-filename" value="Cotizacion-${cotizacionId}.pdf">
       <div id="barra-descarga">
-        <span>Cotización #${cotizacion[0].id.toString().padStart(6, '0')}</span>
+        <span>Cotización #${cotizacionId}</span>
         <button onclick="descargarPDF()" id="btnDescarga">⬇️ Descargar PDF</button>
       </div>
       <div id="contenido-pdf">
-    `).replace('</body>', `
+    `)
+      .replace('</body>', `
       </div>
-      <script>
-        async function descargarPDF() {
-          const btn = document.getElementById('btnDescarga');
-          const barra = document.getElementById('barra-descarga');
-          btn.textContent = 'Generando...';
-          btn.disabled = true;
-          
-          try {
-            const { jsPDF } = window.jspdf;
-            const contenido = document.getElementById('contenido-pdf');
-            
-            // Ocultar barra durante captura
-            barra.style.display = 'none';
-            document.body.style.paddingTop = '0';
-            
-            const canvas = await html2canvas(contenido, {
-              scale: 2,
-              useCORS: true,
-              allowTaint: true,
-              backgroundColor: '#ffffff',
-              logging: false
-            });
-            
-            // Restaurar barra
-            barra.style.display = 'flex';
-            document.body.style.paddingTop = '55px';
-            
-            const imgData = canvas.toDataURL('image/jpeg', 0.95);
-            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            
-            const pageWidth = pdf.internal.pageSize.getWidth();
-            const pageHeight = pdf.internal.pageSize.getHeight();
-            const imgWidth = pageWidth;
-            const imgHeight = (canvas.height * pageWidth) / canvas.width;
-            
-            let posY = 0;
-            let heightLeft = imgHeight;
-            
-            pdf.addImage(imgData, 'JPEG', 0, posY, imgWidth, imgHeight);
-            heightLeft -= pageHeight;
-            
-            while (heightLeft > 0) {
-              posY -= pageHeight;
-              pdf.addPage();
-              pdf.addImage(imgData, 'JPEG', 0, posY, imgWidth, imgHeight);
-              heightLeft -= pageHeight;
-            }
-            
-            pdf.save('Cotizacion-${cotizacion[0].id.toString().padStart(6, '0')}.pdf');
-            
-          } catch (error) {
-            console.error('Error generando PDF:', error);
-            alert('Error al generar PDF. Intenta usar la opción Imprimir del navegador.');
-          } finally {
-            btn.textContent = '⬇️ Descargar PDF';
-            btn.disabled = false;
-          }
-        }
-        
-        // Auto-descargar en móviles al cargar
-        window.addEventListener('load', function() {
-          const esMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-          if (esMobile) {
-            setTimeout(descargarPDF, 1500);
-          }
-        });
-      </script>
     </body>`);
     
     res.setHeader('Content-Type', 'text/html; charset=utf-8');

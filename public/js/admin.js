@@ -39,13 +39,14 @@ let cuentasBancariasData = [];
 let editandoBanco = false;
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Cargar datos iniciales
-    cargarProductos();
-    cargarClientes();
-    cargarCotizaciones();
-    cargarCuentasBancarias();
-    cargarCompany();
-    cargarCompanyEnCotizacion();
+    // Cargar datos iniciales - company primero para que esté disponible
+    cargarCompany().then(() => {
+        cargarCompanyEnCotizacion();
+        cargarProductos();
+        cargarClientes();
+        cargarCotizaciones();
+        cargarCuentasBancarias();
+    });
 
     // Inicializar cotización
     inicializarCotizacion();

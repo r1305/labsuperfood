@@ -271,8 +271,8 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
     `, [id]);
     
     const [cuentasBancarias] = await connection.execute(`
-      SELECT * FROM configuracion_bancaria WHERE activo = TRUE ORDER BY created_at ASC
-    `);
+      SELECT * FROM configuracion_bancaria WHERE activo = TRUE AND company_id = ? ORDER BY created_at ASC
+    `, [cotizacion[0].company_id]);
     
     await connection.end();
     connection = null;
@@ -398,8 +398,8 @@ app.get('/cotizaciones/:id/pdf-simple', async (req, res) => {
     `, [id]);
     
     const [cuentasBancarias] = await connection.execute(`
-      SELECT * FROM configuracion_bancaria WHERE activo = TRUE ORDER BY created_at ASC
-    `);
+      SELECT * FROM configuracion_bancaria WHERE activo = TRUE AND company_id = ? ORDER BY created_at ASC
+    `, [cotizacion[0].company_id]);
     
     await connection.end();
     

@@ -630,46 +630,54 @@
 
     <!-- Bottom Navigation (solo móvil) -->
     <nav class="bottom-nav d-md-none">
-        <button class="bottom-nav-item active" data-bs-toggle="tab" data-bs-target="#cotizacion" onclick="setActiveBottomNav(this)">
+        <button class="bottom-nav-item active" onclick="activarTab('cotizacion', this)">
             <i class="fas fa-plus-circle"></i>
             <span>Nueva</span>
         </button>
-        <button class="bottom-nav-item" data-bs-toggle="tab" data-bs-target="#lista-cotizaciones" onclick="setActiveBottomNav(this)">
+        <button class="bottom-nav-item" onclick="activarTab('lista-cotizaciones', this)">
             <i class="fas fa-list"></i>
             <span>Cotizaciones</span>
         </button>
-        <button class="bottom-nav-item" data-bs-toggle="tab" data-bs-target="#productos" onclick="setActiveBottomNav(this)">
+        <button class="bottom-nav-item" onclick="activarTab('productos', this)">
             <i class="fas fa-box"></i>
             <span>Productos</span>
         </button>
-        <button class="bottom-nav-item" data-bs-toggle="tab" data-bs-target="#clientes" onclick="setActiveBottomNav(this)">
+        <button class="bottom-nav-item" onclick="activarTab('clientes', this)">
             <i class="fas fa-users"></i>
             <span>Clientes</span>
         </button>
-        <button class="bottom-nav-item" data-bs-toggle="tab" data-bs-target="#configuracion" onclick="setActiveBottomNav(this)">
+        <button class="bottom-nav-item" onclick="activarTab('configuracion', this)">
             <i class="fas fa-ellipsis-h"></i>
             <span>Más</span>
         </button>
     </nav>
 
     <script>
-    function setActiveBottomNav(el) {
-        document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
-        el.classList.add('active');
-        // Sync desktop tabs
-        const target = el.getAttribute('data-bs-target');
-        const desktopTab = document.querySelector('[data-bs-target="' + target + '"]');
-        if (desktopTab && desktopTab !== el) {
-            document.querySelectorAll('#adminTabsDesktop .nav-link').forEach(t => t.classList.remove('active'));
-            desktopTab.classList.add('active');
+    function activarTab(tabId, btn) {
+        // Usar el trigger del desktop para activar el tab via Bootstrap
+        const trigger = document.querySelector('#adminTabsDesktop [data-bs-target="#' + tabId + '"]');
+        if (trigger) {
+            bootstrap.Tab.getOrCreateInstance(trigger).show();
         }
+        // Actualizar bottom nav
+        document.querySelectorAll('.bottom-nav-item').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
     }
-    // Sync bottom nav when desktop tab clicked
-    document.querySelectorAll('#adminTabsDesktop .nav-link').forEach(tab => {
-        tab.addEventListener('click', function() {
-            const target = this.getAttribute('data-bs-target');
-            document.querySelectorAll('.bottom-nav-item').forEach(b => {
-                b.classList.toggle('active', b.getAttribute('data-bs-target') === target);
+    // Sincronizar bottom nav cuando se hace clic en desktop
+    document.addEventListener('DOMContentLoaded', function() {
+        const tabMap = {
+            'cotizacion': 0,
+            'lista-cotizaciones': 1,
+            'productos': 2,
+            'clientes': 3,
+            'configuracion': 4
+        };
+        document.querySelectorAll('#adminTabsDesktop .nav-link').forEach(tab => {
+            tab.addEventListener('shown.bs.tab', function() {
+                const target = this.getAttribute('data-bs-target').replace('#', '');
+                const idx = tabMap[target];
+                const btns = document.querySelectorAll('.bottom-nav-item');
+                btns.forEach((b, i) => b.classList.toggle('active', i === idx));
             });
         });
     });

@@ -77,10 +77,14 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     // Formulario de productos
-    document.getElementById('formProducto').addEventListener('submit', async function(e) {
-        e.preventDefault();
+    document.getElementById('btnGuardarProducto').addEventListener('click', async function() {
+        const form = document.getElementById('formProducto');
+        if (!form.checkValidity()) {
+            form.reportValidity();
+            return;
+        }
         
-        const formData = new FormData(this);
+        const formData = new FormData(form);
         const data = Object.fromEntries(formData);
         
         try {
@@ -88,17 +92,13 @@ document.addEventListener('DOMContentLoaded', function() {
             if (editandoProducto) {
                 response = await fetch(`/productos/${data.id}`, {
                     method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
             } else {
                 response = await fetch('/productos', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
+                    headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
             }
@@ -106,15 +106,14 @@ document.addEventListener('DOMContentLoaded', function() {
             const result = await response.json();
             
             if (result.success) {
-                mostrarAlerta(result.message, 'success', 'productos');
-                this.reset();
+                bootstrap.Modal.getInstance(document.getElementById('modalProducto')).hide();
                 cancelarEdicionProducto();
                 cargarProductos();
             } else {
-                mostrarAlerta(result.message, 'danger', 'productos');
+                alert(result.message);
             }
         } catch (error) {
-            mostrarAlerta('Error al procesar producto', 'danger', 'productos');
+            alert('Error al procesar producto');
         }
     });
 
@@ -181,36 +180,55 @@ async function cargarClientes() {
     }
 }
 
+// ===== VARIABLES DE PAGINACIÓN PRODUCTOS =====
+let paginaActualProductos = 1;
+const productosPorPagina = 10;
+let productosFiltrados = [];
+
 function mostrarProductos(productos) {
+    productosFiltrados = productos;
+    paginaActualProductos = 1;
+    renderTablaProductos();
+}
+
+function renderTablaProductos() {
     const lista = document.getElementById('listaProductos');
     const contador = document.getElementById('contadorProductos');
-    lista.innerHTML = '';
-    
-    if (contador) contador.textContent = productos.length;
-    
-    if (productos.length === 0) {
+    const paginacion = document.getElementById('paginacionProductos');
+
+    if (contador) contador.textContent = productosFiltrados.length;
+
+    if (productosFiltrados.length === 0) {
         lista.innerHTML = `
             <div class="text-center py-4 text-muted">
                 <i class="fas fa-box-open fa-3x mb-3 d-block"></i>
                 <p class="mb-0">No hay productos registrados</p>
-                <small>Agrega tu primer producto usando el formulario</small>
+                <small>Haz clic en "Nuevo Producto" para agregar uno</small>
             </div>`;
+        paginacion.innerHTML = '';
         return;
     }
-    
+
+    const totalPaginas = Math.ceil(productosFiltrados.length / productosPorPagina);
+    const inicio = (paginaActualProductos - 1) * productosPorPagina;
+    const fin = inicio + productosPorPagina;
+    const paginaData = productosFiltrados.slice(inicio, fin);
+
     lista.innerHTML = `
         <div class="table-responsive mobile-scroll">
             <table class="table table-hover table-sm">
                 <thead class="table-light">
                     <tr>
+                        <th>#</th>
                         <th>Nombre</th>
-                        <th class="text-center" style="min-width:110px;">Precio</th>
+                        <th class="text-center" style="min-width:120px;">Precio</th>
                         <th class="text-center" style="min-width:90px;">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>
-                    ${productos.map(p => `
+                    ${paginaData.map((p, i) => `
                         <tr>
+                            <td class="text-muted align-middle">${inicio + i + 1}</td>
                             <td class="align-middle">${p.nombre}</td>
                             <td class="text-center align-middle fw-bold text-primary">${formatearMoneda(p.precio)}</td>
                             <td class="text-center align-middle">
@@ -227,6 +245,44 @@ function mostrarProductos(productos) {
                 </tbody>
             </table>
         </div>`;
+
+    // Paginación
+    if (totalPaginas <= 1) {
+        paginacion.innerHTML = `<small class="text-muted">Mostrando ${productosFiltrados.length} producto(s)</small>`;
+        return;
+    }
+
+    let btnsPaginas = '';
+    for (let i = 1; i <= totalPaginas; i++) {
+        btnsPaginas += `<button class="btn btn-sm ${ i === paginaActualProductos ? 'btn-primary' : 'btn-outline-secondary'}" onclick="cambiarPaginaProductos(${i})">${i}</button>`;
+    }
+
+    paginacion.innerHTML = `
+        <small class="text-muted">Mostrando ${inicio + 1}-${Math.min(fin, productosFiltrados.length)} de ${productosFiltrados.length}</small>
+        <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary" onclick="cambiarPaginaProductos(${paginaActualProductos - 1})" ${paginaActualProductos === 1 ? 'disabled' : ''}>
+                <i class="fas fa-chevron-left"></i>
+            </button>
+            ${btnsPaginas}
+            <button class="btn btn-outline-secondary" onclick="cambiarPaginaProductos(${paginaActualProductos + 1})" ${paginaActualProductos === totalPaginas ? 'disabled' : ''}>
+                <i class="fas fa-chevron-right"></i>
+            </button>
+        </div>`;
+}
+
+function cambiarPaginaProductos(pagina) {
+    const totalPaginas = Math.ceil(productosFiltrados.length / productosPorPagina);
+    if (pagina < 1 || pagina > totalPaginas) return;
+    paginaActualProductos = pagina;
+    renderTablaProductos();
+}
+
+function abrirModalProducto() {
+    document.getElementById('formProducto').reset();
+    document.getElementById('productoId').value = '';
+    document.getElementById('tituloModalProducto').innerHTML = '<i class="fas fa-plus-circle"></i> Nuevo Producto';
+    editandoProducto = false;
+    new bootstrap.Modal(document.getElementById('modalProducto')).show();
 }
 
 function mostrarClientes(clientes) {
@@ -279,10 +335,10 @@ function mostrarClientes(clientes) {
 }
 
 function filtrarProductos(termino) {
-    const productosFiltrados = productosData.filter(producto => 
+    const filtrados = productosData.filter(producto => 
         producto.nombre.toLowerCase().includes(termino.toLowerCase())
     );
-    mostrarProductos(productosFiltrados);
+    mostrarProductos(filtrados);
 }
 
 function filtrarClientes(termino) {
@@ -300,12 +356,9 @@ function editarProducto(id) {
         document.getElementById('productoId').value = producto.id;
         document.getElementById('nombreProducto').value = producto.nombre;
         document.getElementById('precioProducto').value = producto.precio;
-        document.getElementById('tituloFormProducto').innerHTML = '<i class="fas fa-edit"></i> Editar Producto';
-        document.getElementById('btnProducto').innerHTML = '<i class="fas fa-save"></i> Actualizar Producto';
-        document.getElementById('btnCancelarProducto').style.display = 'block';
+        document.getElementById('tituloModalProducto').innerHTML = '<i class="fas fa-edit"></i> Editar Producto';
         editandoProducto = true;
-        // Scroll al formulario en móviles
-        document.getElementById('formProducto').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        new bootstrap.Modal(document.getElementById('modalProducto')).show();
     }
 }
 
@@ -328,9 +381,6 @@ function editarCliente(id) {
 
 function cancelarEdicionProducto() {
     document.getElementById('formProducto').reset();
-    document.getElementById('tituloFormProducto').innerHTML = '<i class="fas fa-plus-circle"></i> Agregar Producto';
-    document.getElementById('btnProducto').innerHTML = '<i class="fas fa-save"></i> Guardar Producto';
-    document.getElementById('btnCancelarProducto').style.display = 'none';
     editandoProducto = false;
 }
 

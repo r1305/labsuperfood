@@ -237,60 +237,62 @@
             <!-- Tab Productos -->
             <div class="tab-pane fade" id="productos" role="tabpanel">
                 <div class="row mt-3">
-                    <!-- Formulario -->
-                    <div class="col-lg-4 col-md-5 col-12 mb-3">
-                        <div class="card h-100">
-                            <div class="card-header">
-                                <h5 class="mb-0" id="tituloFormProducto">
-                                    <i class="fas fa-plus-circle"></i> Agregar Producto
-                                </h5>
-                            </div>
-                            <div class="card-body">
-                                <form id="formProducto">
-                                    <input type="hidden" id="productoId" name="id">
-                                    <div class="mb-3">
-                                        <label for="nombreProducto" class="form-label">Nombre del Producto</label>
-                                        <input type="text" class="form-control" id="nombreProducto" name="nombre"
-                                            placeholder="Ej: Proteína Whey 1kg" required>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="precioProducto" class="form-label">Precio (S/)</label>
-                                        <div class="input-group">
-                                            <span class="input-group-text">S/</span>
-                                            <input type="number" step="0.01" min="0" class="form-control"
-                                                id="precioProducto" name="precio" placeholder="0.00" required>
-                                        </div>
-                                    </div>
-                                    <div class="d-grid gap-2">
-                                        <button type="submit" class="btn btn-primary touch-friendly" id="btnProducto">
-                                            <i class="fas fa-save"></i> Guardar Producto
-                                        </button>
-                                        <button type="button" class="btn btn-outline-secondary" id="btnCancelarProducto" style="display:none;">
-                                            <i class="fas fa-times"></i> Cancelar
-                                        </button>
-                                    </div>
-                                </form>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Lista de productos -->
-                    <div class="col-lg-8 col-md-7 col-12">
+                    <div class="col-12">
                         <div class="card">
                             <div class="card-header d-flex justify-content-between align-items-center">
-                                <h5 class="mb-0"><i class="fas fa-box"></i> Productos</h5>
-                                <span class="badge bg-light text-dark" id="contadorProductos">0</span>
+                                <h5 class="mb-0"><i class="fas fa-box"></i> Productos <span class="badge bg-light text-dark ms-2" id="contadorProductos">0</span></h5>
+                                <button class="btn btn-light btn-sm" onclick="abrirModalProducto()">
+                                    <i class="fas fa-plus"></i> Nuevo Producto
+                                </button>
                             </div>
                             <div class="card-body">
                                 <div class="mb-3">
                                     <div class="input-group">
                                         <span class="input-group-text"><i class="fas fa-search"></i></span>
-                                        <input type="text" class="form-control" id="buscarProducto"
-                                            placeholder="Buscar producto...">
+                                        <input type="text" class="form-control" id="buscarProducto" placeholder="Buscar producto...">
                                     </div>
                                 </div>
                                 <div id="listaProductos"></div>
+                                <div id="paginacionProductos" class="d-flex justify-content-between align-items-center mt-3"></div>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Producto -->
+            <div class="modal fade" id="modalProducto" tabindex="-1">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="tituloModalProducto"><i class="fas fa-plus-circle"></i> Nuevo Producto</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                        </div>
+                        <div class="modal-body">
+                            <form id="formProducto">
+                                <input type="hidden" id="productoId" name="id">
+                                <div class="mb-3">
+                                    <label for="nombreProducto" class="form-label">Nombre del Producto</label>
+                                    <input type="text" class="form-control" id="nombreProducto" name="nombre"
+                                        placeholder="Ej: Proteína Whey 1kg" required>
+                                </div>
+                                <div class="mb-3">
+                                    <label for="precioProducto" class="form-label">Precio</label>
+                                    <div class="input-group">
+                                        <span class="input-group-text">S/</span>
+                                        <input type="number" step="0.01" min="0" class="form-control"
+                                            id="precioProducto" name="precio" placeholder="0.00" required>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                                <i class="fas fa-times"></i> Cancelar
+                            </button>
+                            <button type="button" class="btn btn-primary" id="btnGuardarProducto">
+                                <i class="fas fa-save"></i> Guardar
+                            </button>
                         </div>
                     </div>
                 </div>

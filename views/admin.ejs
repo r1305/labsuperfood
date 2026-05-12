@@ -92,6 +92,13 @@
                                                 <label class="form-label">Precio</label>
                                                 <input type="number" step="0.01" min="0" class="form-control" id="precioProductoSeleccionado" placeholder="0.00">
                                             </div>
+                                            <div class="col-lg-1 col-md-3 col-6">
+                                                <label class="form-label">Desc. %</label>
+                                                <div class="input-group">
+                                                    <input type="number" step="0.01" min="0" max="100" class="form-control" id="descuentoProducto" placeholder="0" value="0">
+                                                    <span class="input-group-text">%</span>
+                                                </div>
+                                            </div>
                                             <div class="col-lg-2 col-md-3 col-6">
                                                 <label class="form-label">Cantidad</label>
                                                 <input type="number" step="0.01" min="0" class="form-control" id="cantidadProducto" placeholder="0.00">
@@ -118,11 +125,12 @@
                                             <table class="table table-bordered table-sm">
                                                 <thead class="table-light">
                                                     <tr>
-                                                        <th style="width: 35%; min-width: 150px;">Producto</th>
-                                                        <th style="width: 15%; text-align: center; min-width: 80px;">Precio Unit.</th>
-                                                        <th style="width: 12%; text-align: center; min-width: 70px;">Cantidad</th>
-                                                        <th style="width: 15%; text-align: center; min-width: 80px;">Total</th>
-                                                        <th style="width: 15%; text-align: center; min-width: 80px;">Por Facturar</th>
+                                                        <th style="width: 30%; min-width: 150px;">Producto</th>
+                                                        <th style="width: 13%; text-align: center; min-width: 80px;">Precio Unit.</th>
+                                                        <th style="width: 10%; text-align: center; min-width: 60px;">Desc. %</th>
+                                                        <th style="width: 10%; text-align: center; min-width: 70px;">Cantidad</th>
+                                                        <th style="width: 13%; text-align: center; min-width: 80px;">Total</th>
+                                                        <th style="width: 13%; text-align: center; min-width: 80px;">Por Facturar</th>
                                                         <th style="width: 8%; text-align: center; min-width: 60px;">Acciones</th>
                                                     </tr>
                                                 </thead>

@@ -71,14 +71,20 @@ document.addEventListener('DOMContentLoaded', function() {
         calcularTotalProducto();
     });
 
-    // Botones de cancelar
-    document.getElementById('btnCancelarProducto').addEventListener('click', function() {
-        cancelarEdicionProducto();
-    });
+    // Botones de cancelar (solo si existen en el DOM)
+    const btnCancelarProducto = document.getElementById('btnCancelarProducto');
+    if (btnCancelarProducto) {
+        btnCancelarProducto.addEventListener('click', function() {
+            cancelarEdicionProducto();
+        });
+    }
 
-    document.getElementById('btnCancelarCliente').addEventListener('click', function() {
-        cancelarEdicionCliente();
-    });
+    const btnCancelarCliente = document.getElementById('btnCancelarCliente');
+    if (btnCancelarCliente) {
+        btnCancelarCliente.addEventListener('click', function() {
+            cancelarEdicionCliente();
+        });
+    }
 
     // Formulario de productos
     document.getElementById('btnGuardarProducto').addEventListener('click', async function() {

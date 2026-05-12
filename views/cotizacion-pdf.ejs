@@ -139,16 +139,58 @@ function formatearNumeroPDF(monto) {
             left: 0;
             right: 0;
             width: 100%;
-            text-align: center;
-            font-size: 8px;
-            color: #666;
             clear: both;
-            padding: 10px 20px;
+            padding: 12px 15px;
             background-color: white;
             box-sizing: border-box;
+            border-top: 2px solid #007bff;
         }
         .main-content {
-            margin-bottom: 180px;
+            margin-bottom: 200px;
+        }
+        .deposito-titulo {
+            color: #007bff;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .deposito-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        .deposito-card {
+            flex: 1;
+            min-width: 180px;
+            border: 1px solid #007bff;
+            border-radius: 5px;
+            padding: 8px 10px;
+            background-color: #f0f7ff;
+        }
+        .deposito-banco {
+            font-size: 11px;
+            font-weight: bold;
+            color: #007bff;
+            margin-bottom: 4px;
+        }
+        .deposito-tipo {
+            background-color: #17a2b8;
+            color: white;
+            padding: 1px 5px;
+            border-radius: 3px;
+            font-size: 8px;
+            margin-left: 5px;
+            vertical-align: middle;
+        }
+        .deposito-fila {
+            font-size: 10px;
+            margin-bottom: 2px;
+            color: #333;
+        }
+        .deposito-fila span {
+            color: #666;
         }
         .estado-badge {
             display: inline-block;
@@ -257,32 +299,20 @@ function formatearNumeroPDF(monto) {
     </div>
 
     <div class="footer">
-        <!-- Información Bancaria -->
-        <% 
-        // Obtener cuentas bancarias activas (esto se pasará desde el servidor)
-        if (typeof cuentasBancarias !== 'undefined' && cuentasBancarias.length > 0) {
-        %>
-        <div style="margin-bottom: 10px; page-break-inside: avoid; text-align: left;">
-            <h6 style="color: #007bff; margin-bottom: 8px; font-size: 11px; text-align: left;">INFORMACIÓN PARA DEPÓSITO</h6>
+        <% if (typeof cuentasBancarias !== 'undefined' && cuentasBancarias.length > 0) { %>
+        <div class="deposito-titulo">&#128176; Información para Depósito</div>
+        <div class="deposito-grid">
             <% cuentasBancarias.forEach(cuenta => { %>
-            <div style="border: 1px solid #ddd; border-radius: 3px; padding: 6px; margin-bottom: 6px; background-color: #f9f9f9; display: inline-block; width: 48%; margin-right: 1%; vertical-align: top;">
-                <div style="margin-bottom: 3px;">
-                    <strong style="color: #007bff; font-size: 9px;"><%= cuenta.banco %></strong>
-                    <span style="background-color: #17a2b8; color: white; padding: 1px 3px; border-radius: 2px; font-size: 7px; margin-left: 5px;">
-                        <%= cuenta.tipo_cuenta === 'ahorros' ? 'AHORROS' : 'CORRIENTE' %>
-                    </span>
+            <div class="deposito-card">
+                <div class="deposito-banco">
+                    <%= cuenta.banco %>
+                    <span class="deposito-tipo"><%= cuenta.tipo_cuenta === 'ahorros' ? 'AHORROS' : 'CORRIENTE' %></span>
                 </div>
-                <div style="font-size: 8px; margin-bottom: 1px;">
-                    <span style="color: #666;">Número de Cuenta:</span> <strong><%= cuenta.numero_cuenta %></strong>
-                </div>
+                <div class="deposito-fila"><span>Número de Cuenta:</span> <strong><%= cuenta.numero_cuenta %></strong></div>
                 <% if (cuenta.cci) { %>
-                <div style="font-size: 8px; margin-bottom: 1px;">
-                    <span style="color: #666;">CCI:</span> <strong><%= cuenta.cci %></strong>
-                </div>
+                <div class="deposito-fila"><span>CCI:</span> <strong><%= cuenta.cci %></strong></div>
                 <% } %>
-                <div style="font-size: 8px;">
-                    <span style="color: #666;">Titular:</span> <strong><%= cuenta.titular %></strong>
-                </div>
+                <div class="deposito-fila"><span>Titular:</span> <strong><%= cuenta.titular %></strong></div>
             </div>
             <% }); %>
         </div>

@@ -310,12 +310,9 @@ app.get('/cotizaciones/:id/pdf-simple', async (req, res) => {
   
   try {
     const { id } = req.params;
-    console.log('=== GENERANDO HTML SIMPLE PARA MÓVIL ===');
-    console.log('ID Cotización:', id);
     
     connection = await createConnection();
     
-    // Obtener cotización con cliente
     const [cotizacion] = await connection.execute(`
       SELECT c.*, cl.razon_social, cl.dni_ruc, cl.distrito, cl.direccion, cl.telefono
       FROM cotizaciones c 
@@ -325,19 +322,9 @@ app.get('/cotizaciones/:id/pdf-simple', async (req, res) => {
     
     if (cotizacion.length === 0) {
       await connection.end();
-      res.status(404);
-      res.setHeader('Content-Type', 'text/html');
-      return res.end(`
-        <!DOCTYPE html>
-        <html><head><title>Error</title></head>
-        <body style="font-family: Arial; text-align: center; padding: 50px;">
-          <h1>Cotización no encontrada</h1>
-          <p>La cotización #${id} no existe en el sistema.</p>
-        </body></html>
-      `);
+      return res.status(404).send('Cotización no encontrada');
     }
     
-    // Obtener detalles
     const [detalles] = await connection.execute(`
       SELECT dc.*, p.nombre as producto_nombre
       FROM detalle_cotizaciones dc
@@ -345,130 +332,138 @@ app.get('/cotizaciones/:id/pdf-simple', async (req, res) => {
       WHERE dc.cotizacion_id = ?
     `, [id]);
     
-    // Obtener cuentas bancarias activas
     const [cuentasBancarias] = await connection.execute(`
       SELECT * FROM configuracion_bancaria WHERE activo = TRUE ORDER BY created_at ASC
     `);
     
     await connection.end();
     
-    // Renderizar HTML con estilos de impresión optimizados
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 'no-cache');
-    
-    // Renderizar template con estilos adicionales para impresión
+    // Renderizar template con botón de descarga via jsPDF
     const html = await new Promise((resolve, reject) => {
       res.app.render('cotizacion-pdf', {
         cotizacion: cotizacion[0],
-        detalles: detalles,
-        cuentasBancarias: cuentasBancarias
-      }, (err, html) => {
-        if (err) {
-          reject(err);
-        } else {
-          // Agregar estilos adicionales para impresión móvil
-          const htmlConEstilos = html.replace(
-            '</head>',
-            `
-            <style>
-              @media print {
-                body { margin: 0 !important; }
-                .no-print { display: none !important; }
-                .footer { position: static !important; }
-              }
-              .print-instructions {
-                background: #e3f2fd;
-                border: 1px solid #2196f3;
-                border-radius: 5px;
-                padding: 15px;
-                margin: 20px 0;
-                text-align: center;
-                font-family: Arial, sans-serif;
-              }
-              .print-button {
-                background: #2196f3;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 5px;
-                font-size: 16px;
-                cursor: pointer;
-                margin: 10px;
-              }
-              @media (max-width: 768px) {
-                .print-instructions {
-                  margin: 10px;
-                  padding: 10px;
-                  font-size: 14px;
-                }
-              }
-            </style>
-            <script>
-              function imprimirPDF() {
-                window.print();
-              }
-              
-              // Auto-mostrar diálogo de impresión en móviles después de cargar
-              window.addEventListener('load', function() {
-                const esMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-                if (esMobile) {
-                  setTimeout(function() {
-                    if (confirm('¿Deseas guardar esta cotización como PDF?\n\nPresiona OK para abrir el menú de impresión.')) {
-                      window.print();
-                    }
-                  }, 1000);
-                }
-              });
-            </script>
-            </head>`
-          );
-          
-          // Agregar instrucciones de impresión al inicio del body
-          const htmlFinal = htmlConEstilos.replace(
-            '<body>',
-            `<body>
-            <div class="print-instructions no-print">
-              <h3 style="margin-top: 0; color: #1976d2;">📱 Versión Móvil - Cotización #${id}</h3>
-              <p>Para guardar como PDF, usa la opción <strong>"Imprimir"</strong> de tu navegador y selecciona <strong>"Guardar como PDF"</strong>.</p>
-              <button class="print-button" onclick="imprimirPDF()">
-                🖨️ Imprimir / Guardar PDF
-              </button>
-              <p style="font-size: 12px; color: #666; margin-bottom: 0;">
-                En la configuración de impresión, asegúrate de seleccionar "Incluir gráficos de fondo" para mejor calidad.
-              </p>
-            </div>`
-          );
-          
-          resolve(htmlFinal);
-        }
-      });
+        detalles,
+        cuentasBancarias
+      }, (err, html) => err ? reject(err) : resolve(html));
     });
     
-    res.send(html);
-    console.log('=== HTML SIMPLE ENVIADO ===');
+    // Inyectar jsPDF + html2canvas y botón de descarga
+    const htmlFinal = html.replace('</head>', `
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+      <style>
+        #barra-descarga {
+          position: fixed;
+          top: 0; left: 0; right: 0;
+          background: #007bff;
+          color: white;
+          padding: 10px 20px;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          z-index: 9999;
+          font-family: Arial, sans-serif;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        #barra-descarga span { font-size: 14px; font-weight: bold; }
+        #barra-descarga button {
+          background: white;
+          color: #007bff;
+          border: none;
+          padding: 8px 18px;
+          border-radius: 5px;
+          font-size: 14px;
+          font-weight: bold;
+          cursor: pointer;
+        }
+        #barra-descarga button:active { opacity: 0.8; }
+        body { padding-top: 55px !important; }
+        @media print { #barra-descarga { display: none !important; } }
+      </style>
+    </head>`).replace('<body>', `<body>
+      <div id="barra-descarga">
+        <span>Cotización #${cotizacion[0].id.toString().padStart(6, '0')}</span>
+        <button onclick="descargarPDF()" id="btnDescarga">⬇️ Descargar PDF</button>
+      </div>
+      <div id="contenido-pdf">
+    `).replace('</body>', `
+      </div>
+      <script>
+        async function descargarPDF() {
+          const btn = document.getElementById('btnDescarga');
+          const barra = document.getElementById('barra-descarga');
+          btn.textContent = 'Generando...';
+          btn.disabled = true;
+          
+          try {
+            const { jsPDF } = window.jspdf;
+            const contenido = document.getElementById('contenido-pdf');
+            
+            // Ocultar barra durante captura
+            barra.style.display = 'none';
+            document.body.style.paddingTop = '0';
+            
+            const canvas = await html2canvas(contenido, {
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              backgroundColor: '#ffffff',
+              logging: false
+            });
+            
+            // Restaurar barra
+            barra.style.display = 'flex';
+            document.body.style.paddingTop = '55px';
+            
+            const imgData = canvas.toDataURL('image/jpeg', 0.95);
+            const pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            
+            const pageWidth = pdf.internal.pageSize.getWidth();
+            const pageHeight = pdf.internal.pageSize.getHeight();
+            const imgWidth = pageWidth;
+            const imgHeight = (canvas.height * pageWidth) / canvas.width;
+            
+            let posY = 0;
+            let heightLeft = imgHeight;
+            
+            pdf.addImage(imgData, 'JPEG', 0, posY, imgWidth, imgHeight);
+            heightLeft -= pageHeight;
+            
+            while (heightLeft > 0) {
+              posY -= pageHeight;
+              pdf.addPage();
+              pdf.addImage(imgData, 'JPEG', 0, posY, imgWidth, imgHeight);
+              heightLeft -= pageHeight;
+            }
+            
+            pdf.save('Cotizacion-${cotizacion[0].id.toString().padStart(6, '0')}.pdf');
+            
+          } catch (error) {
+            console.error('Error generando PDF:', error);
+            alert('Error al generar PDF. Intenta usar la opción Imprimir del navegador.');
+          } finally {
+            btn.textContent = '⬇️ Descargar PDF';
+            btn.disabled = false;
+          }
+        }
+        
+        // Auto-descargar en móviles al cargar
+        window.addEventListener('load', function() {
+          const esMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+          if (esMobile) {
+            setTimeout(descargarPDF, 1500);
+          }
+        });
+      </script>
+    </body>`);
+    
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.send(htmlFinal);
     
   } catch (error) {
-    console.error('Error en PDF simple:', error);
-    
-    if (connection) {
-      try {
-        await connection.end();
-      } catch (closeError) {
-        console.error('Error cerrando conexión:', closeError);
-      }
-    }
-    
-    res.status(500);
-    res.setHeader('Content-Type', 'text/html');
-    res.end(`
-      <!DOCTYPE html>
-      <html><head><title>Error</title></head>
-      <body style="font-family: Arial; text-align: center; padding: 50px;">
-        <h1>Error del Servidor</h1>
-        <p>No se pudo generar la cotización: ${error.message}</p>
-        <button onclick="history.back()" style="padding: 10px 20px; font-size: 16px;">Volver</button>
-      </body></html>
-    `);
+    console.error('Error en pdf-simple:', error);
+    if (connection) try { await connection.end(); } catch (e) {}
+    res.status(500).send(`<h1>Error: ${error.message}</h1>`);
   }
 });
 

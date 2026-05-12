@@ -236,6 +236,10 @@ function renderTablaProductos() {
                             <td class="text-center align-middle fw-bold text-primary">${formatearMoneda(p.precio)}</td>
                             <td class="text-center align-middle">
                                 <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-info" onclick="abrirTiposPrecio(${p.id}, '${p.nombre.replace(/'/g, "\\'")}')"
+                                        title="Tipos de precio">
+                                        <i class="fas fa-tags"></i>
+                                    </button>
                                     <button class="btn btn-warning" onclick="editarProducto(${p.id})" title="Editar">
                                         <i class="fas fa-edit"></i>
                                     </button>
@@ -544,6 +548,15 @@ function inicializarCotizacion() {
         calcularTotalProducto();
     });
 
+    // Tipo de precio
+    document.getElementById('selectTipoPrecio').addEventListener('change', function() {
+        const selected = this.options[this.selectedIndex];
+        if (selected && selected.dataset.precio) {
+            document.getElementById('precioProductoSeleccionado').value = parseFloat(selected.dataset.precio).toFixed(2);
+            calcularTotalProducto();
+        }
+    });
+
     // Abono
     document.getElementById('abono').addEventListener('input', function() {
         calcularSaldo();
@@ -781,6 +794,9 @@ function seleccionarProducto(producto) {
     // Ocultar lista móvil si existe
     ocultarListaMobile('listaProductosMobile');
     
+    // Cargar tipos de precio
+    cargarTiposPrecioEnCotizacion(producto.id, producto.precio);
+    
     document.getElementById('cantidadProducto').focus();
     calcularTotalProducto();
 }
@@ -879,6 +895,9 @@ function limpiarFormularioProducto() {
     document.getElementById('cantidadProducto').value = '';
     document.getElementById('totalProducto').value = '';
     document.getElementById('selectProducto').style.display = 'none';
+    document.getElementById('colTipoPrecio').style.display = 'none';
+    document.getElementById('selectTipoPrecio').innerHTML = '<option value="">-- Precio base --</option>';
+    ocultarListaMobile('listaProductosMobile');
 }
 
 function calcularTotalCotizacion() {
@@ -1505,6 +1524,134 @@ async function mostrarInfoBancaria() {
         document.getElementById('infoBancaria').style.display = 'block';
     } catch (error) {
         console.error('Error cargando información bancaria:', error);
+    }
+}
+
+// ===== FUNCIONES DE TIPOS DE PRECIO =====
+let productoPreciosId = null;
+
+async function abrirTiposPrecio(productoId, productoNombre) {
+    productoPreciosId = productoId;
+    document.getElementById('nombreProductoTipos').textContent = productoNombre;
+    document.getElementById('inputTipoPrecio').value = '';
+    document.getElementById('inputPrecioTipo').value = '';
+    await cargarTiposPrecio();
+    new bootstrap.Modal(document.getElementById('modalTiposPrecio')).show();
+}
+
+async function cargarTiposPrecio() {
+    try {
+        const response = await fetch(`/productos/${productoPreciosId}/tipos-precio`);
+        const tipos = await response.json();
+        renderTiposPrecio(tipos);
+    } catch (error) {
+        console.error('Error cargando tipos de precio:', error);
+    }
+}
+
+function renderTiposPrecio(tipos) {
+    const container = document.getElementById('listaTiposPrecio');
+
+    if (tipos.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <i class="fas fa-tag fa-2x mb-2 d-block"></i>
+                <p class="mb-0">No hay tipos de precio registrados</p>
+                <small>Agrega al menos uno usando el formulario</small>
+            </div>`;
+        return;
+    }
+
+    const filas = tipos.map(t => `
+        <tr>
+            <td class="align-middle fw-semibold">${t.tipo}</td>
+            <td class="text-center align-middle fw-bold text-primary">${formatearMoneda(t.precio)}</td>
+            <td class="text-center align-middle">
+                <button class="btn btn-danger btn-sm" onclick="eliminarTipoPrecio(${t.id})">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>`).join('');
+
+    container.innerHTML = `
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th>Tipo</th>
+                        <th class="text-center">Precio</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>${filas}</tbody>
+            </table>
+        </div>`;
+}
+
+async function agregarTipoPrecio() {
+    const tipo = document.getElementById('inputTipoPrecio').value.trim();
+    const precio = parseFloat(document.getElementById('inputPrecioTipo').value);
+
+    if (!tipo || !precio || precio <= 0) {
+        alert('Por favor completa el tipo y el precio');
+        return;
+    }
+
+    try {
+        const response = await fetch(`/productos/${productoPreciosId}/tipos-precio`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tipo, precio })
+        });
+        const result = await response.json();
+        if (result.success) {
+            document.getElementById('inputTipoPrecio').value = '';
+            document.getElementById('inputPrecioTipo').value = '';
+            await cargarTiposPrecio();
+        } else {
+            alert(result.message);
+        }
+    } catch (error) {
+        alert('Error al agregar tipo de precio');
+    }
+}
+
+async function eliminarTipoPrecio(id) {
+    if (!confirm('\u00bfEliminar este tipo de precio?')) return;
+    try {
+        const response = await fetch(`/tipos-precio/${id}`, { method: 'DELETE' });
+        const result = await response.json();
+        if (result.success) await cargarTiposPrecio();
+    } catch (error) {
+        alert('Error al eliminar tipo de precio');
+    }
+}
+
+// Cargar tipos de precio al seleccionar un producto en cotización
+async function cargarTiposPrecioEnCotizacion(productoId, precioBase) {
+    const colTipo = document.getElementById('colTipoPrecio');
+    const selectTipo = document.getElementById('selectTipoPrecio');
+
+    try {
+        const response = await fetch(`/productos/${productoId}/tipos-precio`);
+        const tipos = await response.json();
+
+        selectTipo.innerHTML = `<option value="" data-precio="${precioBase}">-- Precio base (${formatearMoneda(precioBase)}) --</option>`;
+
+        if (tipos.length > 0) {
+            tipos.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.dataset.precio = t.precio;
+                opt.textContent = `${t.tipo} (${formatearMoneda(t.precio)})`;
+                selectTipo.appendChild(opt);
+            });
+            colTipo.style.display = 'block';
+        } else {
+            colTipo.style.display = 'none';
+        }
+    } catch (error) {
+        colTipo.style.display = 'none';
     }
 }
 

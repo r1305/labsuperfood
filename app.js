@@ -574,6 +574,70 @@ app.delete('/etiquetas/:id', async (req, res) => {
   }
 });
 
+// Rutas para tipo_precio
+app.get('/productos/:id/tipos-precio', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const connection = await createConnection();
+    const [tipos] = await connection.execute(
+      'SELECT * FROM tipo_precio WHERE producto_id = ? ORDER BY tipo ASC',
+      [id]
+    );
+    await connection.end();
+    res.json(tipos);
+  } catch (error) {
+    console.error('Error:', error);
+    res.json([]);
+  }
+});
+
+app.post('/productos/:id/tipos-precio', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tipo, precio } = req.body;
+    const connection = await createConnection();
+    await connection.execute(
+      'INSERT INTO tipo_precio (producto_id, tipo, precio) VALUES (?, ?, ?)',
+      [id, tipo, precio]
+    );
+    await connection.end();
+    res.json({ success: true, message: 'Tipo de precio agregado correctamente' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.json({ success: false, message: 'Error al agregar tipo de precio' });
+  }
+});
+
+app.put('/tipos-precio/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { tipo, precio } = req.body;
+    const connection = await createConnection();
+    await connection.execute(
+      'UPDATE tipo_precio SET tipo = ?, precio = ? WHERE id = ?',
+      [tipo, precio, id]
+    );
+    await connection.end();
+    res.json({ success: true, message: 'Tipo de precio actualizado correctamente' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.json({ success: false, message: 'Error al actualizar tipo de precio' });
+  }
+});
+
+app.delete('/tipos-precio/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const connection = await createConnection();
+    await connection.execute('DELETE FROM tipo_precio WHERE id = ?', [id]);
+    await connection.end();
+    res.json({ success: true, message: 'Tipo de precio eliminado correctamente' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.json({ success: false, message: 'Error al eliminar tipo de precio' });
+  }
+});
+
 // Rutas para productos
 app.post('/productos', async (req, res) => {
   try {

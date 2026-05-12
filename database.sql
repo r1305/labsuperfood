@@ -41,6 +41,16 @@ CREATE TABLE IF NOT EXISTS detalle_cotizaciones (
     FOREIGN KEY (producto_id) REFERENCES productos(id)
 );
 
+-- Crear tabla tipo_precio
+CREATE TABLE IF NOT EXISTS tipo_precio (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    producto_id INT NOT NULL,
+    tipo VARCHAR(100) NOT NULL,
+    precio DECIMAL(10,2) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
+);
+
 -- Crear tabla etiquetas_cliente
 CREATE TABLE IF NOT EXISTS etiquetas_cliente (
     id INT AUTO_INCREMENT PRIMARY KEY,

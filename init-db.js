@@ -81,6 +81,19 @@ async function inicializarBaseDatos() {
     `);
     console.log('✅ Tabla configuracion_bancaria creada');
 
+    // Crear tabla tipo_precio
+    await connection.execute(`
+      CREATE TABLE IF NOT EXISTS tipo_precio (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        producto_id INT NOT NULL,
+        tipo VARCHAR(100) NOT NULL,
+        precio DECIMAL(10,2) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (producto_id) REFERENCES productos(id) ON DELETE CASCADE
+      )
+    `);
+    console.log('\u2705 Tabla tipo_precio creada');
+
     // Crear tabla etiquetas_cliente
     console.log('Creando tabla etiquetas_cliente...');
     await connection.execute(`

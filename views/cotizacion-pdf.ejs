@@ -26,7 +26,10 @@ function formatearNumeroPDF(monto) {
     <title>Cotización #<%= cotizacion.id %></title>
     <style>
         @page {
-            margin: 10mm; /* Márgenes de página reducidos a la mitad */
+            margin-top: 10mm;
+            margin-left: 10mm;
+            margin-right: 10mm;
+            margin-bottom: 55mm;
         }
         body {
             font-family: Arial, sans-serif;
@@ -146,7 +149,7 @@ function formatearNumeroPDF(monto) {
             border-top: 2px solid #007bff;
         }
         .main-content {
-            margin-bottom: 200px;
+            margin-bottom: 0;
         }
         .deposito-titulo {
             color: #007bff;

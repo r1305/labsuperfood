@@ -473,6 +473,12 @@
                     <form id="formProducto">
                         <input type="hidden" id="productoId" name="id">
                         <div class="mb-3">
+                            <label class="form-label">Compañía</label>
+                            <select class="form-select" id="productoCompanyId" name="company_id" required>
+                                <option value="1">Cargando...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
                             <label for="nombreProducto" class="form-label">Nombre del Producto</label>
                             <input type="text" class="form-control" id="nombreProducto" name="nombre"
                                 placeholder="Ej: Proteína Whey 1kg" required>
@@ -502,6 +508,12 @@
                 <div class="modal-body">
                     <form id="formCliente">
                         <input type="hidden" id="clienteId" name="id">
+                        <div class="mb-3">
+                            <label class="form-label">Compañía</label>
+                            <select class="form-select" id="clienteCompanyId" name="company_id" required>
+                                <option value="1">Cargando...</option>
+                            </select>
+                        </div>
                         <div class="mb-3">
                             <label for="razonSocial" class="form-label">Razón Social</label>
                             <input type="text" class="form-control" id="razonSocial" name="razon_social"

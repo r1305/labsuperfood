@@ -207,9 +207,10 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
-async function cargarProductos() {
+async function cargarProductos(company_id) {
     try {
-        const response = await fetch('/productos');
+        const url = company_id ? `/productos?company_id=${company_id}` : '/productos';
+        const response = await fetch(url);
         productosData = await response.json();
         mostrarProductos(productosData);
     } catch (error) {
@@ -217,14 +218,22 @@ async function cargarProductos() {
     }
 }
 
-async function cargarClientes() {
+async function cargarClientes(company_id) {
     try {
-        const response = await fetch('/clientes');
+        const url = company_id ? `/clientes?company_id=${company_id}` : '/clientes';
+        const response = await fetch(url);
         clientesData = await response.json();
         mostrarClientes(clientesData);
     } catch (error) {
         console.error('Error cargando clientes:', error);
     }
+}
+
+async function cargarDatosPorCompany(company_id) {
+    await Promise.all([
+        cargarClientes(company_id),
+        cargarProductos(company_id)
+    ]);
 }
 
 // ===== VARIABLES DE PAGINACIÓN PRODUCTOS =====
@@ -474,6 +483,7 @@ function editarProducto(id) {
     const producto = productosData.find(p => p.id === id);
     if (producto) {
         document.getElementById('productoId').value = producto.id;
+        document.getElementById('productoCompanyId').value = producto.company_id || 1;
         document.getElementById('nombreProducto').value = producto.nombre;
         document.getElementById('tituloModalProducto').innerHTML = '<i class="fas fa-edit"></i> Editar Producto';
         editandoProducto = true;
@@ -485,6 +495,7 @@ function editarCliente(id) {
     const cliente = clientesData.find(c => c.id === id);
     if (cliente) {
         document.getElementById('clienteId').value = cliente.id;
+        document.getElementById('clienteCompanyId').value = cliente.company_id || 1;
         document.getElementById('razonSocial').value = cliente.razon_social;
         document.getElementById('dniRuc').value = cliente.dni_ruc;
         document.getElementById('distrito').value = cliente.distrito;
@@ -578,6 +589,16 @@ function inicializarCotizacion() {
     // Buscador de cliente
     document.getElementById('buscarClienteCotizacion').addEventListener('input', function() {
         buscarClientesCotizacion(this.value);
+    });
+
+    // Cambio de compañía en cotización: recargar clientes y productos filtrados
+    document.getElementById('selectCompanyCotizacion').addEventListener('change', function() {
+        limpiarClienteSeleccionado();
+        limpiarFormularioProducto();
+        itemsCotizacion = [];
+        actualizarTablaItems();
+        calcularTotalCotizacion();
+        cargarDatosPorCompany(this.value);
     });
 
     // Limpiar cliente seleccionado
@@ -1724,13 +1745,15 @@ async function cargarCompanyEnCotizacion() {
     try {
         const response = await fetch('/company');
         const companies = await response.json();
-        const select = document.getElementById('selectCompanyCotizacion');
-        select.innerHTML = companies.map(c =>
-            `<option value="${c.id}">${c.razon_social} (${c.ruc_dni})</option>`
-        ).join('');
-        if (companies.length === 0) {
-            select.innerHTML = '<option value="1">Sin compañías</option>';
-        }
+        const selects = [
+            document.getElementById('selectCompanyCotizacion'),
+            document.getElementById('clienteCompanyId'),
+            document.getElementById('productoCompanyId')
+        ];
+        const options = companies.length > 0
+            ? companies.map(c => `<option value="${c.id}">${c.razon_social} (${c.ruc_dni})</option>`).join('')
+            : '<option value="1">Sin compañías</option>';
+        selects.forEach(s => { if (s) s.innerHTML = options; });
     } catch (error) {
         console.error('Error cargando compañías:', error);
     }

@@ -677,9 +677,9 @@ app.delete('/tipos-precio/:id', async (req, res) => {
 // Rutas para productos
 app.post('/productos', async (req, res) => {
   try {
-    const { nombre } = req.body;
+    const { nombre, company_id } = req.body;
     const connection = await createConnection();
-    await connection.execute('INSERT INTO productos (nombre) VALUES (?)', [nombre]);
+    await connection.execute('INSERT INTO productos (nombre, company_id) VALUES (?, ?)', [nombre, company_id || 1]);
     await connection.end();
     res.json({ success: true, message: 'Producto agregado correctamente' });
   } catch (error) {
@@ -690,15 +690,21 @@ app.post('/productos', async (req, res) => {
 
 app.get('/productos', async (req, res) => {
   try {
+    const { company_id } = req.query;
     const connection = await createConnection();
-    const [productos] = await connection.execute(`
-      SELECT p.id, p.nombre, p.created_at,
+    let query = `
+      SELECT p.id, p.nombre, p.company_id, p.created_at,
         COUNT(tp.id) as total_tipos
       FROM productos p
       LEFT JOIN tipo_precio tp ON p.id = tp.producto_id
-      GROUP BY p.id
-      ORDER BY p.id DESC
-    `);
+    `;
+    const params = [];
+    if (company_id) {
+      query += ' WHERE p.company_id = ?';
+      params.push(company_id);
+    }
+    query += ' GROUP BY p.id ORDER BY p.id DESC';
+    const [productos] = await connection.execute(query, params);
     await connection.end();
     res.json(productos);
   } catch (error) {
@@ -710,9 +716,9 @@ app.get('/productos', async (req, res) => {
 app.put('/productos/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { nombre } = req.body;
+    const { nombre, company_id } = req.body;
     const connection = await createConnection();
-    await connection.execute('UPDATE productos SET nombre = ? WHERE id = ?', [nombre, id]);
+    await connection.execute('UPDATE productos SET nombre = ?, company_id = ? WHERE id = ?', [nombre, company_id || 1, id]);
     await connection.end();
     res.json({ success: true, message: 'Producto actualizado correctamente' });
   } catch (error) {
@@ -792,14 +798,12 @@ app.delete('/company/:id', async (req, res) => {
 // Rutas para clientes
 app.post('/clientes', async (req, res) => {
   try {
-    const { razon_social, dni_ruc, distrito, direccion, telefono } = req.body;
+    const { razon_social, dni_ruc, distrito, direccion, telefono, company_id } = req.body;
     const connection = await createConnection();
-    
     await connection.execute(
-      'INSERT INTO clientes (razon_social, dni_ruc, distrito, direccion, telefono) VALUES (?, ?, ?, ?, ?)',
-      [razon_social, dni_ruc, distrito, direccion, telefono]
+      'INSERT INTO clientes (razon_social, dni_ruc, distrito, direccion, telefono, company_id) VALUES (?, ?, ?, ?, ?, ?)',
+      [razon_social, dni_ruc, distrito, direccion, telefono, company_id || 1]
     );
-    
     await connection.end();
     res.json({ success: true, message: 'Cliente agregado correctamente' });
   } catch (error) {
@@ -810,8 +814,16 @@ app.post('/clientes', async (req, res) => {
 
 app.get('/clientes', async (req, res) => {
   try {
+    const { company_id } = req.query;
     const connection = await createConnection();
-    const [clientes] = await connection.execute('SELECT * FROM clientes ORDER BY id DESC');
+    let query = 'SELECT * FROM clientes';
+    const params = [];
+    if (company_id) {
+      query += ' WHERE company_id = ?';
+      params.push(company_id);
+    }
+    query += ' ORDER BY id DESC';
+    const [clientes] = await connection.execute(query, params);
     await connection.end();
     res.json(clientes);
   } catch (error) {
@@ -823,14 +835,12 @@ app.get('/clientes', async (req, res) => {
 app.put('/clientes/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { razon_social, dni_ruc, distrito, direccion, telefono } = req.body;
+    const { razon_social, dni_ruc, distrito, direccion, telefono, company_id } = req.body;
     const connection = await createConnection();
-    
     await connection.execute(
-      'UPDATE clientes SET razon_social = ?, dni_ruc = ?, distrito = ?, direccion = ?, telefono = ? WHERE id = ?',
-      [razon_social, dni_ruc, distrito, direccion, telefono, id]
+      'UPDATE clientes SET razon_social = ?, dni_ruc = ?, distrito = ?, direccion = ?, telefono = ?, company_id = ? WHERE id = ?',
+      [razon_social, dni_ruc, distrito, direccion, telefono, company_id || 1, id]
     );
-    
     await connection.end();
     res.json({ success: true, message: 'Cliente actualizado correctamente' });
   } catch (error) {

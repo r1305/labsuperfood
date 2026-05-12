@@ -2,7 +2,9 @@
 CREATE TABLE IF NOT EXISTS productos (
     id INT AUTO_INCREMENT PRIMARY KEY,
     nombre VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    company_id INT NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (company_id) REFERENCES company(id)
 );
 
 -- Crear tabla clientes
@@ -13,7 +15,9 @@ CREATE TABLE IF NOT EXISTS clientes (
     distrito VARCHAR(100) NOT NULL,
     direccion TEXT NOT NULL,
     telefono VARCHAR(20) NOT NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    company_id INT NOT NULL DEFAULT 1,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (company_id) REFERENCES company(id)
 );
 
 -- Crear tabla cotizaciones

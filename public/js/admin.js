@@ -1372,8 +1372,6 @@ async function cambiarEstado(id, nuevoEstado) {
 }
 
 // ===== FUNCIONES DE CONFIGURACIÓN BANCARIA =====
-let bancosData = [];
-let editandoBanco = false;
 let paginaActualBancos = 1;
 const bancosPorPagina = 10;
 let bancosFiltrados = [];

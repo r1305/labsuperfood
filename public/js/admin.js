@@ -228,34 +228,51 @@ function mostrarProductos(productos) {
 
 function mostrarClientes(clientes) {
     const lista = document.getElementById('listaClientes');
+    const contador = document.getElementById('contadorClientes');
     lista.innerHTML = '';
     
+    if (contador) contador.textContent = clientes.length;
+    
     if (clientes.length === 0) {
-        lista.innerHTML = '<p class="text-muted">No hay clientes registrados</p>';
+        lista.innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <i class="fas fa-users fa-3x mb-3 d-block"></i>
+                <p class="mb-0">No hay clientes registrados</p>
+                <small>Agrega tu primer cliente usando el formulario</small>
+            </div>`;
         return;
     }
     
+    const grid = document.createElement('div');
+    grid.className = 'clientes-grid';
+    
     clientes.forEach(cliente => {
-        const item = document.createElement('div');
-        item.className = 'lista-item';
-        item.innerHTML = `
-            <div class="item-content">
-                <strong>${cliente.razon_social}</strong><br>
-                <span class="text-muted">DNI/RUC: ${cliente.dni_ruc}</span><br>
-                <span class="text-muted">${cliente.distrito} - ${cliente.direccion}</span><br>
-                <span class="text-muted">Tel: ${cliente.telefono}</span>
-            </div>
-            <div class="item-actions">
-                <button class="btn btn-warning btn-sm" onclick="editarCliente(${cliente.id})">
-                    <i class="fas fa-edit"></i> Editar
-                </button>
-                <button class="btn btn-danger btn-sm" onclick="eliminarCliente(${cliente.id})">
-                    <i class="fas fa-trash"></i> Eliminar
-                </button>
+        const card = document.createElement('div');
+        card.className = 'cliente-card';
+        card.innerHTML = `
+            <div class="cliente-card-body">
+                <div class="cliente-info-card">
+                    <div class="cliente-nombre">${cliente.razon_social}</div>
+                    <div class="cliente-detalle">
+                        <span><i class="fas fa-id-card"></i> ${cliente.dni_ruc}</span>
+                        <span><i class="fas fa-map-marker-alt"></i> ${cliente.distrito}</span>
+                        <span><i class="fas fa-phone"></i> ${cliente.telefono}</span>
+                    </div>
+                </div>
+                <div class="cliente-acciones">
+                    <button class="btn btn-warning btn-sm" onclick="editarCliente(${cliente.id})" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn btn-danger btn-sm" onclick="eliminarCliente(${cliente.id})" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
             </div>
         `;
-        lista.appendChild(item);
+        grid.appendChild(card);
     });
+    
+    lista.appendChild(grid);
 }
 
 function filtrarProductos(termino) {
@@ -298,10 +315,11 @@ function editarCliente(id) {
         document.getElementById('distrito').value = cliente.distrito;
         document.getElementById('direccion').value = cliente.direccion;
         document.getElementById('telefono').value = cliente.telefono;
-        document.getElementById('tituloFormCliente').textContent = 'Editar Cliente';
-        document.getElementById('btnCliente').textContent = 'Actualizar Cliente';
-        document.getElementById('btnCancelarCliente').style.display = 'inline-block';
+        document.getElementById('tituloFormCliente').innerHTML = '<i class="fas fa-user-edit"></i> Editar Cliente';
+        document.getElementById('btnCliente').innerHTML = '<i class="fas fa-save"></i> Actualizar Cliente';
+        document.getElementById('btnCancelarCliente').style.display = 'block';
         editandoCliente = true;
+        document.getElementById('formCliente').scrollIntoView({ behavior: 'smooth', block: 'start' });
     }
 }
 
@@ -315,8 +333,8 @@ function cancelarEdicionProducto() {
 
 function cancelarEdicionCliente() {
     document.getElementById('formCliente').reset();
-    document.getElementById('tituloFormCliente').textContent = 'Agregar Cliente';
-    document.getElementById('btnCliente').textContent = 'Agregar Cliente';
+    document.getElementById('tituloFormCliente').innerHTML = '<i class="fas fa-user-plus"></i> Agregar Cliente';
+    document.getElementById('btnCliente').innerHTML = '<i class="fas fa-save"></i> Guardar Cliente';
     document.getElementById('btnCancelarCliente').style.display = 'none';
     editandoCliente = false;
 }

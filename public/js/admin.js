@@ -1537,6 +1537,9 @@ function abrirModalBanco() {
     document.getElementById('bancoId').value = '';
     document.getElementById('tituloModalBanco').innerHTML = '<i class="fas fa-university"></i> Nueva Cuenta Bancaria';
     editandoBanco = false;
+    // Poblar dropdown de compañías
+    const options = companyData.map(c => `<option value="${c.id}">${c.razon_social} (${c.ruc_dni})</option>`).join('');
+    document.getElementById('bancoCompanyId').innerHTML = options || '<option value="1">Sin compañías</option>';
     new bootstrap.Modal(document.getElementById('modalBanco')).show();
 }
 
@@ -1544,7 +1547,11 @@ function editarBanco(id) {
     const cuenta = bancosData.find(c => c.id === id);
     if (cuenta) {
         document.getElementById('bancoId').value = cuenta.id;
-        document.getElementById('bancoCompanyId').value = cuenta.company_id || 1;
+        // Poblar dropdown de compañías y seleccionar la correcta
+        const options = companyData.map(c =>
+            `<option value="${c.id}" ${c.id === cuenta.company_id ? 'selected' : ''}>${c.razon_social} (${c.ruc_dni})</option>`
+        ).join('');
+        document.getElementById('bancoCompanyId').innerHTML = options || '<option value="1">Sin compañías</option>';
         document.getElementById('nombreBanco').value = cuenta.banco;
         document.getElementById('tipoCuenta').value = cuenta.tipo_cuenta;
         document.getElementById('numeroCuenta').value = cuenta.numero_cuenta;

@@ -1,3 +1,25 @@
+// ===== FUNCIONES DE UTILIDAD =====
+
+// Función para formatear moneda peruana
+function formatearMoneda(monto) {
+    const numero = parseFloat(monto) || 0;
+    return numero.toLocaleString('es-PE', {
+        style: 'currency',
+        currency: 'PEN',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+// Función alternativa sin símbolo de moneda
+function formatearNumero(monto) {
+    const numero = parseFloat(monto) || 0;
+    return numero.toLocaleString('es-PE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
 let productosData = [];
 let clientesData = [];
 let editandoProducto = false;
@@ -174,7 +196,7 @@ function mostrarProductos(productos) {
         item.innerHTML = `
             <div class="item-content">
                 <strong>${producto.nombre}</strong><br>
-                <span class="text-muted">Precio: S/ ${parseFloat(producto.precio).toFixed(2)}</span>
+                <span class="text-muted">Precio: ${formatearMoneda(producto.precio)}</span>
             </div>
             <div class="item-actions">
                 <button class="btn btn-warning btn-sm" onclick="editarProducto(${producto.id})">
@@ -549,7 +571,7 @@ function mostrarSelectProductos(productosFiltrados, select) {
     productosFiltrados.forEach(producto => {
         const option = document.createElement('option');
         option.value = producto.id;
-        option.textContent = `${producto.nombre} - S/ ${parseFloat(producto.precio).toFixed(2)}`;
+        option.textContent = `${producto.nombre} - ${formatearMoneda(producto.precio)}`;
         option.dataset.producto = JSON.stringify(producto);
         select.appendChild(option);
     });
@@ -580,7 +602,7 @@ function mostrarListaMobileProductos(productosFiltrados) {
         item.className = 'mobile-list-item';
         item.innerHTML = `
             <div><strong>${producto.nombre}</strong></div>
-            <div class="text-muted small">S/ ${parseFloat(producto.precio).toFixed(2)}</div>
+            <div class="text-muted small">${formatearMoneda(producto.precio)}</div>
         `;
         
         // Eventos táctiles
@@ -619,7 +641,7 @@ function calcularTotalProducto() {
     const precio = parseFloat(document.getElementById('precioProductoSeleccionado').value) || 0;
     const total = cantidad * precio;
     
-    document.getElementById('totalProducto').value = `S/ ${total.toFixed(2)}`;
+    document.getElementById('totalProducto').value = formatearMoneda(total);
 }
 
 function agregarItemCotizacion() {
@@ -672,11 +694,11 @@ function actualizarTablaItems() {
         fila.className = 'item-row';
         fila.innerHTML = `
             <td>${item.nombre}</td>
-            <td>S/ ${item.precio.toFixed(2)}</td>
-            <td>${item.cantidad}</td>
-            <td>S/ ${item.total.toFixed(2)}</td>
-            <td>S/ ${item.total.toFixed(2)}</td>
-            <td>
+            <td class="text-center">${formatearMoneda(item.precio)}</td>
+            <td class="text-center">${formatearNumero(item.cantidad)}</td>
+            <td class="text-center">${formatearMoneda(item.total)}</td>
+            <td class="text-center">${formatearMoneda(item.total)}</td>
+            <td class="text-center">
                 <button class="btn btn-danger btn-sm" onclick="eliminarItem(${item.id})">
                     <i class="fas fa-trash"></i>
                 </button>
@@ -703,8 +725,8 @@ function limpiarFormularioProducto() {
 
 function calcularTotalCotizacion() {
     const total = itemsCotizacion.reduce((sum, item) => sum + item.total, 0);
-    document.getElementById('totalAPagar').textContent = `S/ ${total.toFixed(2)}`;
-    document.getElementById('totalPorFacturar').textContent = `S/ ${total.toFixed(2)}`;
+    document.getElementById('totalAPagar').textContent = formatearMoneda(total);
+    document.getElementById('totalPorFacturar').textContent = formatearMoneda(total);
     calcularSaldo();
     
     // Mostrar información bancaria si hay items
@@ -719,7 +741,7 @@ function calcularSaldo() {
     const total = itemsCotizacion.reduce((sum, item) => sum + item.total, 0);
     const abono = parseFloat(document.getElementById('abono').value) || 0;
     const saldo = total - abono;
-    document.getElementById('saldo').textContent = `S/ ${saldo.toFixed(2)}`;
+    document.getElementById('saldo').textContent = formatearMoneda(saldo);
 }
 
 function guardarCotizacion() {
@@ -869,9 +891,9 @@ function mostrarCotizaciones(cotizaciones) {
                 <strong>${cotizacion.razon_social}</strong><br>
                 <small class="text-muted">${cotizacion.dni_ruc}</small>
             </td>
-            <td class="text-center"><strong>S/ ${parseFloat(cotizacion.total).toFixed(2)}</strong></td>
-            <td class="text-center">S/ ${parseFloat(cotizacion.abono).toFixed(2)}</td>
-            <td class="text-center">S/ ${parseFloat(cotizacion.saldo).toFixed(2)}</td>
+            <td class="text-center"><strong>${formatearMoneda(cotizacion.total)}</strong></td>
+            <td class="text-center">${formatearMoneda(cotizacion.abono)}</td>
+            <td class="text-center">${formatearMoneda(cotizacion.saldo)}</td>
             <td class="text-center">
                 <span class="badge bg-${getEstadoColor(cotizacion.estado)}">
                     ${cotizacion.estado.toUpperCase()}
@@ -1014,19 +1036,19 @@ function mostrarModalDetalle(cotizacion, detalles) {
                                     <table class="table table-sm table-bordered">
                                         <tr class="table-light">
                                             <td><strong>Total:</strong></td>
-                                            <td class="text-end"><strong>S/ ${parseFloat(cotizacion.total).toFixed(2)}</strong></td>
+                                            <td class="text-end"><strong>${formatearMoneda(cotizacion.total)}</strong></td>
                                         </tr>
                                         <tr class="table-light">
                                             <td><strong>Por Facturar:</strong></td>
-                                            <td class="text-end"><strong>S/ ${parseFloat(cotizacion.total).toFixed(2)}</strong></td>
+                                            <td class="text-end"><strong>${formatearMoneda(cotizacion.total)}</strong></td>
                                         </tr>
                                         <tr>
                                             <td>Abono:</td>
-                                            <td class="text-end">S/ ${parseFloat(cotizacion.abono).toFixed(2)}</td>
+                                            <td class="text-end">${formatearMoneda(cotizacion.abono)}</td>
                                         </tr>
                                         <tr class="table-primary">
                                             <td><strong>Saldo:</strong></td>
-                                            <td class="text-end"><strong>S/ ${parseFloat(cotizacion.saldo).toFixed(2)}</strong></td>
+                                            <td class="text-end"><strong>${formatearMoneda(cotizacion.saldo)}</strong></td>
                                         </tr>
                                     </table>
                                 </div>

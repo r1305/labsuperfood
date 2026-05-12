@@ -1,3 +1,23 @@
+<%
+// Función para formatear moneda peruana en el template
+function formatearMonedaPDF(monto) {
+    const numero = parseFloat(monto) || 0;
+    return numero.toLocaleString('es-PE', {
+        style: 'currency',
+        currency: 'PEN',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+
+function formatearNumeroPDF(monto) {
+    const numero = parseFloat(monto) || 0;
+    return numero.toLocaleString('es-PE', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    });
+}
+%>
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -69,8 +89,15 @@
             font-size: 9px;
             white-space: normal;
             word-wrap: break-word;
-            vertical-align: top;
+            vertical-align: middle;
             line-height: 1.1;
+        }
+        
+        /* Centrado específico para columnas numéricas */
+        .productos-table th:nth-child(n+2),
+        .productos-table td:nth-child(n+2) {
+            text-align: center;
+            vertical-align: middle;
         }
         .productos-table th {
             background-color: #007bff;
@@ -194,11 +221,11 @@
         <tbody>
             <% detalles.forEach(detalle => { %>
             <tr>
-                <td style="width: 35%; line-height: 1.1; max-height: 2.2em; overflow: hidden;"><%= detalle.producto_nombre %></td>
-                <td style="width: 13%; text-align: center;"><%= detalle.cantidad %></td>
-                <td style="width: 13%; text-align: center;">S/ <%= parseFloat(detalle.precio_unitario).toFixed(2) %></td>
-                <td style="width: 13%; text-align: center;">S/ <%= parseFloat(detalle.total).toFixed(2) %></td>
-                <td style="width: 13%; text-align: center;">S/ <%= parseFloat(detalle.total).toFixed(2) %></td>
+                <td style="width: 35%; line-height: 1.1; max-height: 2.2em; overflow: hidden; vertical-align: middle;"><%= detalle.producto_nombre %></td>
+                <td style="width: 13%; text-align: center; vertical-align: middle;"><%= formatearNumeroPDF(detalle.cantidad) %></td>
+                <td style="width: 13%; text-align: center; vertical-align: middle;"><%= formatearMonedaPDF(detalle.precio_unitario) %></td>
+                <td style="width: 13%; text-align: center; vertical-align: middle;"><%= formatearMonedaPDF(detalle.total) %></td>
+                <td style="width: 13%; text-align: center; vertical-align: middle;"><%= formatearMonedaPDF(detalle.total) %></td>
             </tr>
             <% }); %>
         </tbody>
@@ -208,19 +235,19 @@
         <table class="totales-table">
             <tr>
                 <td><strong>SUBTOTAL:</strong></td>
-                <td class="text-right">S/ <%= parseFloat(cotizacion.total).toFixed(2) %></td>
+                <td class="text-right"><%= formatearMonedaPDF(cotizacion.total) %></td>
             </tr>
             <tr>
                 <td><strong>POR FACTURAR:</strong></td>
-                <td class="text-right">S/ <%= parseFloat(cotizacion.total).toFixed(2) %></td>
+                <td class="text-right"><%= formatearMonedaPDF(cotizacion.total) %></td>
             </tr>
             <tr>
                 <td>ABONO:</td>
-                <td class="text-right">S/ <%= parseFloat(cotizacion.abono).toFixed(2) %></td>
+                <td class="text-right"><%= formatearMonedaPDF(cotizacion.abono) %></td>
             </tr>
             <tr class="total-row">
                 <td>SALDO:</td>
-                <td class="text-right">S/ <%= parseFloat(cotizacion.saldo).toFixed(2) %></td>
+                <td class="text-right"><%= formatearMonedaPDF(cotizacion.saldo) %></td>
             </tr>
         </table>
     </div>

@@ -1061,6 +1061,9 @@ function mostrarCotizaciones(cotizaciones) {
                                     <button class="btn btn-success" onclick="descargarPDF(${cotizacion.id})" title="Descargar PDF">
                                         <i class="fas fa-file-pdf"></i>
                                     </button>
+                                    <button class="btn btn-danger" onclick="eliminarCotizacion(${cotizacion.id})" title="Eliminar cotización">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
                                     <div class="btn-group" role="group">
                                         <button class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown" title="Cambiar estado">
                                             <i class="fas fa-cog"></i>
@@ -1225,6 +1228,22 @@ function mostrarModalDetalle(cotizacion, detalles) {
     // Mostrar modal
     const modal = new bootstrap.Modal(document.getElementById('modalDetalle'));
     modal.show();
+}
+
+async function eliminarCotizacion(id) {
+    if (!confirm(`¿Estás seguro de que deseas eliminar la Cotización #${id.toString().padStart(6, '0')}?\n\nEsta acción no se puede deshacer.`)) return;
+    
+    try {
+        const response = await fetch(`/cotizaciones/${id}`, { method: 'DELETE' });
+        const result = await response.json();
+        if (result.success) {
+            cargarCotizaciones();
+        } else {
+            alert('Error al eliminar: ' + result.message);
+        }
+    } catch (error) {
+        alert('Error de conexión al eliminar la cotización');
+    }
 }
 
 async function cambiarEstado(id, nuevoEstado) {

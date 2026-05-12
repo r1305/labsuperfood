@@ -156,6 +156,20 @@ app.get('/cotizaciones/:id/detalle', async (req, res) => {
   }
 });
 
+app.delete('/cotizaciones/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const connection = await createConnection();
+    await connection.execute('DELETE FROM detalle_cotizaciones WHERE cotizacion_id = ?', [id]);
+    await connection.execute('DELETE FROM cotizaciones WHERE id = ?', [id]);
+    await connection.end();
+    res.json({ success: true, message: 'Cotización eliminada correctamente' });
+  } catch (error) {
+    console.error('Error:', error);
+    res.json({ success: false, message: 'Error al eliminar cotización' });
+  }
+});
+
 app.put('/cotizaciones/:id/estado', async (req, res) => {
   try {
     const { id } = req.params;

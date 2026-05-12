@@ -337,36 +337,23 @@
                             <div class="card mb-3">
                                 <div class="card-body">
                                     <h6 class="mb-3"><i class="fas fa-plus-circle"></i> Nueva Etiqueta</h6>
-                                    <div class="row g-2 align-items-end">
-                                        <div class="col-sm-6 col-12">
-                                            <label class="form-label">Nombre de la etiqueta</label>
-                                            <input type="text" class="form-control" id="inputEtiqueta"
-                                                placeholder="Ej: Cliente VIP, Mayorista..." maxlength="100">
+                                    <div class="row g-2">
+                                        <div class="col-md-5 col-12">
+                                            <label class="form-label">Marca</label>
+                                            <input type="text" class="form-control" id="inputMarca" placeholder="Ej: Nike, Adidas...">
                                         </div>
-                                        <div class="col-sm-3 col-6">
-                                            <label class="form-label">Color</label>
-                                            <input type="color" class="form-control form-control-color w-100"
-                                                id="colorEtiqueta" value="#007bff">
+                                        <div class="col-md-5 col-12">
+                                            <label class="form-label">Nombre del Producto</label>
+                                            <input type="text" class="form-control" id="inputNombreProductoEtiqueta" placeholder="Ej: Zapatillas Air Max...">
                                         </div>
-                                        <div class="col-sm-3 col-6">
+                                        <div class="col-md-12 col-12">
+                                            <label class="form-label">Foto</label>
+                                            <input type="file" class="form-control" id="inputFotoEtiqueta" accept="image/*">
+                                        </div>
+                                        <div class="col-12">
                                             <button class="btn btn-primary w-100" onclick="agregarEtiqueta()">
-                                                <i class="fas fa-plus"></i> Agregar
+                                                <i class="fas fa-plus"></i> Agregar Etiqueta
                                             </button>
-                                        </div>
-                                    </div>
-                                    <!-- Colores predefinidos -->
-                                    <div class="mt-2">
-                                        <small class="text-muted">Colores rápidos:</small>
-                                        <div class="d-flex gap-1 mt-1 flex-wrap">
-                                            <span class="color-preset" style="background:#007bff" onclick="seleccionarColor('#007bff')"></span>
-                                            <span class="color-preset" style="background:#28a745" onclick="seleccionarColor('#28a745')"></span>
-                                            <span class="color-preset" style="background:#dc3545" onclick="seleccionarColor('#dc3545')"></span>
-                                            <span class="color-preset" style="background:#ffc107" onclick="seleccionarColor('#ffc107')"></span>
-                                            <span class="color-preset" style="background:#17a2b8" onclick="seleccionarColor('#17a2b8')"></span>
-                                            <span class="color-preset" style="background:#6f42c1" onclick="seleccionarColor('#6f42c1')"></span>
-                                            <span class="color-preset" style="background:#fd7e14" onclick="seleccionarColor('#fd7e14')"></span>
-                                            <span class="color-preset" style="background:#20c997" onclick="seleccionarColor('#20c997')"></span>
-                                            <span class="color-preset" style="background:#6c757d" onclick="seleccionarColor('#6c757d')"></span>
                                         </div>
                                     </div>
                                 </div>

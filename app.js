@@ -4,6 +4,21 @@ const path = require('path');
 const puppeteer = require('puppeteer-core');
 const chromium = require('@sparticuz/chromium');
 const fs = require('fs');
+const multer = require('multer');
+
+// Configuración de multer para subida de fotos
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    const dir = path.join(__dirname, 'public', 'uploads', 'etiquetas');
+    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+    cb(null, dir);
+  },
+  filename: (req, file, cb) => {
+    const ext = path.extname(file.originalname);
+    cb(null, `etiqueta_${Date.now()}${ext}`);
+  }
+});
+const upload = multer({ storage, limits: { fileSize: 5 * 1024 * 1024 } });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -508,14 +523,15 @@ app.get('/clientes/:id/etiquetas', async (req, res) => {
   }
 });
 
-app.post('/clientes/:id/etiquetas', async (req, res) => {
+app.post('/clientes/:id/etiquetas', upload.single('foto'), async (req, res) => {
   try {
     const { id } = req.params;
-    const { etiqueta, color } = req.body;
+    const { marca, nombre_producto } = req.body;
+    const foto = req.file ? `/uploads/etiquetas/${req.file.filename}` : null;
     const connection = await createConnection();
     await connection.execute(
-      'INSERT INTO etiquetas_cliente (cliente_id, etiqueta, color) VALUES (?, ?, ?)',
-      [id, etiqueta, color || '#007bff']
+      'INSERT INTO etiquetas_cliente (cliente_id, marca, nombre_producto, foto) VALUES (?, ?, ?, ?)',
+      [id, marca, nombre_producto, foto]
     );
     await connection.end();
     res.json({ success: true, message: 'Etiqueta agregada correctamente' });
@@ -529,6 +545,12 @@ app.delete('/etiquetas/:id', async (req, res) => {
   try {
     const { id } = req.params;
     const connection = await createConnection();
+    // Obtener foto para eliminarla del disco
+    const [rows] = await connection.execute('SELECT foto FROM etiquetas_cliente WHERE id = ?', [id]);
+    if (rows.length > 0 && rows[0].foto) {
+      const fotoPath = path.join(__dirname, 'public', rows[0].foto);
+      if (fs.existsSync(fotoPath)) fs.unlinkSync(fotoPath);
+    }
     await connection.execute('DELETE FROM etiquetas_cliente WHERE id = ?', [id]);
     await connection.end();
     res.json({ success: true, message: 'Etiqueta eliminada correctamente' });

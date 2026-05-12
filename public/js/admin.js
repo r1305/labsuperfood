@@ -1484,8 +1484,9 @@ let clienteEtiquetasId = null;
 async function abrirEtiquetas(clienteId, clienteNombre) {
     clienteEtiquetasId = clienteId;
     document.getElementById('nombreClienteEtiquetas').textContent = clienteNombre;
-    document.getElementById('inputEtiqueta').value = '';
-    document.getElementById('colorEtiqueta').value = '#007bff';
+    document.getElementById('inputMarca').value = '';
+    document.getElementById('inputNombreProductoEtiqueta').value = '';
+    document.getElementById('inputFotoEtiqueta').value = '';
     await cargarEtiquetas();
     new bootstrap.Modal(document.getElementById('modalEtiquetas')).show();
 }
@@ -1505,41 +1506,73 @@ function renderEtiquetas(etiquetas) {
 
     if (etiquetas.length === 0) {
         container.innerHTML = `
-            <div class="etiquetas-container">
-                <span class="etiquetas-vacio"><i class="fas fa-tag"></i> No hay etiquetas asignadas a este cliente</span>
+            <div class="text-center py-4 text-muted">
+                <i class="fas fa-tags fa-2x mb-2 d-block"></i>
+                <p class="mb-0">No hay etiquetas registradas para este cliente</p>
             </div>`;
         return;
     }
 
-    const badges = etiquetas.map(e => `
-        <span class="etiqueta-badge" style="background-color: ${e.color}">
-            ${e.etiqueta}
-            <button class="btn-eliminar-etiqueta" onclick="eliminarEtiqueta(${e.id})" title="Eliminar">
-                <i class="fas fa-times"></i>
-            </button>
-        </span>`).join('');
+    const filas = etiquetas.map(e => `
+        <tr>
+            <td class="align-middle">
+                ${e.foto
+                    ? `<img src="${e.foto}" alt="${e.marca}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">`
+                    : `<div style="width:50px;height:50px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-image text-muted"></i></div>`
+                }
+            </td>
+            <td class="align-middle fw-semibold">${e.marca}</td>
+            <td class="align-middle">${e.nombre_producto}</td>
+            <td class="align-middle text-muted small">${new Date(e.created_at).toLocaleDateString('es-PE')}</td>
+            <td class="text-center align-middle">
+                <button class="btn btn-danger btn-sm" onclick="eliminarEtiqueta(${e.id})" title="Eliminar">
+                    <i class="fas fa-trash"></i>
+                </button>
+            </td>
+        </tr>`).join('');
 
-    container.innerHTML = `<div class="etiquetas-container">${badges}</div>`;
+    container.innerHTML = `
+        <div class="table-responsive">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th style="width:60px;">Foto</th>
+                        <th>Marca</th>
+                        <th>Nombre del Producto</th>
+                        <th>Fecha</th>
+                        <th class="text-center">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>${filas}</tbody>
+            </table>
+        </div>`;
 }
 
 async function agregarEtiqueta() {
-    const etiqueta = document.getElementById('inputEtiqueta').value.trim();
-    const color = document.getElementById('colorEtiqueta').value;
+    const marca = document.getElementById('inputMarca').value.trim();
+    const nombre_producto = document.getElementById('inputNombreProductoEtiqueta').value.trim();
+    const fotoInput = document.getElementById('inputFotoEtiqueta');
 
-    if (!etiqueta) {
-        document.getElementById('inputEtiqueta').focus();
+    if (!marca || !nombre_producto) {
+        alert('Por favor completa Marca y Nombre del Producto');
         return;
     }
+
+    const formData = new FormData();
+    formData.append('marca', marca);
+    formData.append('nombre_producto', nombre_producto);
+    if (fotoInput.files[0]) formData.append('foto', fotoInput.files[0]);
 
     try {
         const response = await fetch(`/clientes/${clienteEtiquetasId}/etiquetas`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ etiqueta, color })
+            body: formData
         });
         const result = await response.json();
         if (result.success) {
-            document.getElementById('inputEtiqueta').value = '';
+            document.getElementById('inputMarca').value = '';
+            document.getElementById('inputNombreProductoEtiqueta').value = '';
+            document.getElementById('inputFotoEtiqueta').value = '';
             await cargarEtiquetas();
         } else {
             alert(result.message);

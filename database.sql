@@ -45,8 +45,9 @@ CREATE TABLE IF NOT EXISTS detalle_cotizaciones (
 CREATE TABLE IF NOT EXISTS etiquetas_cliente (
     id INT AUTO_INCREMENT PRIMARY KEY,
     cliente_id INT NOT NULL,
-    etiqueta VARCHAR(100) NOT NULL,
-    color VARCHAR(7) DEFAULT '#007bff',
+    marca VARCHAR(100) NOT NULL,
+    nombre_producto VARCHAR(255) NOT NULL,
+    foto VARCHAR(500),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (cliente_id) REFERENCES clientes(id) ON DELETE CASCADE
 );

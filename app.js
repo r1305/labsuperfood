@@ -217,6 +217,13 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
     const { id } = req.params;
     console.log('Generando PDF para cotización:', id);
     
+    // Configurar headers antes de cualquier operación
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `inline; filename="Cotizacion-${id.toString().padStart(6, '0')}.pdf"`);
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
     connection = await createConnection();
     
     // Obtener cotización con cliente
@@ -228,7 +235,9 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
     `, [id]);
     
     if (cotizacion.length === 0) {
-      return res.status(404).json({ success: false, message: 'Cotización no encontrada' });
+      console.log('Cotización no encontrada:', id);
+      res.status(404);
+      return res.end('Cotización no encontrada');
     }
     
     // Obtener detalles
@@ -245,16 +254,22 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
     `);
     
     await connection.end();
+    connection = null;
     
     // Renderizar HTML
+    console.log('Renderizando HTML...');
     const html = await new Promise((resolve, reject) => {
       res.app.render('cotizacion-pdf', {
         cotizacion: cotizacion[0],
         detalles: detalles,
         cuentasBancarias: cuentasBancarias
       }, (err, html) => {
-        if (err) reject(err);
-        else resolve(html);
+        if (err) {
+          console.error('Error renderizando template:', err);
+          reject(err);
+        } else {
+          resolve(html);
+        }
       });
     });
     
@@ -262,34 +277,50 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
     console.log('Iniciando puppeteer...');
     browser = await puppeteer.launch({
       headless: 'new',
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
+      args: [
+        '--no-sandbox', 
+        '--disable-setuid-sandbox',
+        '--disable-dev-shm-usage',
+        '--disable-gpu',
+        '--no-first-run',
+        '--no-zygote',
+        '--single-process'
+      ]
     });
     
     const page = await browser.newPage();
-    await page.setContent(html, { waitUntil: 'networkidle0' });
     
+    // Configurar página
+    await page.setViewport({ width: 1200, height: 800 });
+    await page.setContent(html, { 
+      waitUntil: ['networkidle0', 'domcontentloaded'],
+      timeout: 30000
+    });
+    
+    console.log('Generando PDF...');
     const pdf = await page.pdf({
       format: 'A4',
       margin: {
-        top: '20mm',
-        right: '15mm',
-        bottom: '20mm',
-        left: '15mm'
+        top: '10mm',
+        right: '10mm',
+        bottom: '10mm',
+        left: '10mm'
       },
-      printBackground: true
+      printBackground: true,
+      preferCSSPageSize: true
     });
     
     await browser.close();
+    browser = null;
+    
+    console.log('PDF generado exitosamente, tamaño:', pdf.length, 'bytes');
     
     // Enviar PDF
-    res.setHeader('Content-Type', 'application/pdf');
-    res.setHeader('Content-Disposition', `attachment; filename="Cotizacion-${id.toString().padStart(6, '0')}.pdf"`);
-    res.send(pdf);
-    
-    console.log('PDF generado exitosamente');
+    res.end(pdf);
     
   } catch (error) {
     console.error('Error generando PDF:', error);
+    console.error('Stack trace:', error.stack);
     
     if (browser) {
       try {
@@ -307,7 +338,12 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
       }
     }
     
-    res.status(500).json({ success: false, message: 'Error al generar PDF: ' + error.message });
+    // Si ya se enviaron headers, no podemos enviar JSON
+    if (!res.headersSent) {
+      res.status(500);
+      res.setHeader('Content-Type', 'text/plain');
+      res.end('Error interno del servidor al generar PDF');
+    }
   }
 });
 

@@ -1317,21 +1317,111 @@ function descargarPDF(id) {
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     btn.disabled = true;
     
-    // Crear enlace temporal para descarga
-    const link = document.createElement('a');
-    link.href = `/cotizaciones/${id}/pdf`;
-    link.download = `Cotizacion-${id.toString().padStart(6, '0')}.pdf`;
+    // Detectar tipo de dispositivo
+    const esMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     
-    // Agregar al DOM y hacer clic
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    const url = `/cotizaciones/${id}/pdf`;
+    const filename = `Cotizacion-${id.toString().padStart(6, '0')}.pdf`;
     
-    // Restaurar botón después de un momento
-    setTimeout(() => {
-        btn.innerHTML = iconoOriginal;
-        btn.disabled = false;
-    }, 2000);
+    if (esMobile) {
+        // Para móviles: usar diferentes estrategias según el dispositivo
+        if (esIOS) {
+            // iOS: abrir en nueva ventana
+            const newWindow = window.open(url, '_blank');
+            if (!newWindow) {
+                alert('Por favor, permite las ventanas emergentes para descargar el PDF');
+            }
+        } else {
+            // Android y otros móviles: intentar descarga directa primero
+            try {
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = filename;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                
+                // Agregar al DOM temporalmente
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                
+                // Si no funciona, abrir en nueva ventana como respaldo
+                setTimeout(() => {
+                    window.open(url, '_blank');
+                }, 1000);
+            } catch (error) {
+                console.log('Descarga directa falló, usando ventana nueva');
+                window.open(url, '_blank');
+            }
+        }
+        
+        // Restaurar botón rápidamente en móviles
+        setTimeout(() => {
+            btn.innerHTML = iconoOriginal;
+            btn.disabled = false;
+        }, 1500);
+    } else {
+        // Para desktop: usar fetch para mejor control
+        fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/pdf'
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+            
+            // Verificar que realmente es un PDF
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/pdf')) {
+                throw new Error('El servidor no devolvió un PDF válido');
+            }
+            
+            return response.blob();
+        })
+        .then(blob => {
+            // Verificar que el blob no está vacío
+            if (blob.size === 0) {
+                throw new Error('El PDF generado está vacío');
+            }
+            
+            // Crear URL del blob
+            const blobUrl = window.URL.createObjectURL(blob);
+            
+            // Crear enlace temporal para descarga
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = filename;
+            
+            // Agregar al DOM y hacer clic
+            document.body.appendChild(link);
+            link.click();
+            
+            // Limpiar
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+            
+            console.log('PDF descargado exitosamente');
+        })
+        .catch(error => {
+            console.error('Error en descarga:', error);
+            
+            // Como respaldo, intentar abrir en nueva ventana
+            console.log('Intentando descarga alternativa...');
+            window.open(url, '_blank');
+            
+            // Mostrar mensaje al usuario
+            alert('Se abrió el PDF en una nueva ventana. Si no se descargó automáticamente, usa Ctrl+S para guardarlo.');
+        })
+        .finally(() => {
+            // Restaurar botón
+            btn.innerHTML = iconoOriginal;
+            btn.disabled = false;
+        });
+    }
 }
 
 // Función para editar cotización

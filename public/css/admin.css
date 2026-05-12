@@ -132,7 +132,6 @@ body {
 .table td:nth-child(4),
 .table td:nth-child(5) {
     font-size: 10px;
-    text-align: right;
     min-width: 80px;
 }
 

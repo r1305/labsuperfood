@@ -492,7 +492,12 @@ app.post('/configuracion-bancaria', async (req, res) => {
 app.get('/configuracion-bancaria', async (req, res) => {
   try {
     const connection = await createConnection();
-    const [cuentas] = await connection.execute('SELECT * FROM configuracion_bancaria ORDER BY created_at DESC');
+    const [cuentas] = await connection.execute(`
+      SELECT cb.*, co.razon_social as company_nombre
+      FROM configuracion_bancaria cb
+      LEFT JOIN company co ON cb.company_id = co.id
+      ORDER BY cb.created_at DESC
+    `);
     await connection.end();
     res.json(cuentas);
   } catch (error) {

@@ -1484,7 +1484,7 @@ function renderTablaBancos() {
                             <td class="align-middle d-none d-md-table-cell text-muted">${b.cci || '-'}</td>
                             <td class="align-middle">${b.titular}</td>
                             <td class="align-middle">
-                                <span class="badge bg-light text-dark">${companyData.find(c => c.id === b.company_id)?.razon_social || 'Compañía #' + b.company_id}</span>
+                                <span class="badge bg-light text-dark">${b.company_nombre || 'Compañía #' + b.company_id}</span>
                             </td>
                             <td class="text-center align-middle">
                                 <span class="badge ${b.activo ? 'bg-success' : 'bg-secondary'}">${b.activo ? 'Activa' : 'Inactiva'}</span>

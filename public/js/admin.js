@@ -1515,15 +1515,15 @@ function renderEtiquetas(etiquetas) {
 
     const filas = etiquetas.map(e => `
         <tr>
-            <td class="align-middle">
+            <td class="text-center align-middle">
                 ${e.foto
-                    ? `<img src="${e.foto}" alt="${e.marca}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;">`
-                    : `<div style="width:50px;height:50px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;"><i class="fas fa-image text-muted"></i></div>`
+                    ? `<img src="${e.foto}" alt="${e.marca}" style="width:50px;height:50px;object-fit:cover;border-radius:6px;cursor:pointer;" onclick="ampliarFoto('${e.foto}')" title="Click para ampliar">`
+                    : `<div style="width:50px;height:50px;background:#f0f0f0;border-radius:6px;display:flex;align-items:center;justify-content:center;margin:auto;"><i class="fas fa-image text-muted"></i></div>`
                 }
             </td>
-            <td class="align-middle fw-semibold">${e.marca}</td>
-            <td class="align-middle">${e.nombre_producto}</td>
-            <td class="align-middle text-muted small">${new Date(e.created_at).toLocaleDateString('es-PE')}</td>
+            <td class="text-center align-middle fw-semibold">${e.marca}</td>
+            <td class="text-center align-middle">${e.nombre_producto}</td>
+            <td class="text-center align-middle text-muted small">${new Date(e.created_at).toLocaleDateString('es-PE')}</td>
             <td class="text-center align-middle">
                 <button class="btn btn-danger btn-sm" onclick="eliminarEtiqueta(${e.id})" title="Eliminar">
                     <i class="fas fa-trash"></i>
@@ -1536,15 +1536,26 @@ function renderEtiquetas(etiquetas) {
             <table class="table table-hover table-sm">
                 <thead class="table-light">
                     <tr>
-                        <th style="width:60px;">Foto</th>
-                        <th>Marca</th>
-                        <th>Nombre del Producto</th>
-                        <th>Fecha</th>
+                        <th class="text-center" style="width:70px;">Foto</th>
+                        <th class="text-center">Marca</th>
+                        <th class="text-center">Nombre del Producto</th>
+                        <th class="text-center">Fecha</th>
                         <th class="text-center">Acciones</th>
                     </tr>
                 </thead>
                 <tbody>${filas}</tbody>
             </table>
+        </div>
+
+        <!-- Modal foto ampliada -->
+        <div class="modal fade" id="modalFotoEtiqueta" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content bg-transparent border-0">
+                    <div class="modal-body text-center p-0">
+                        <img id="fotoAmpliada" src="" alt="Foto" style="max-width:100%;max-height:90vh;border-radius:8px;box-shadow:0 0 20px rgba(0,0,0,0.5);">
+                    </div>
+                </div>
+            </div>
         </div>`;
 }
 
@@ -1580,6 +1591,11 @@ async function agregarEtiqueta() {
     } catch (error) {
         alert('Error al agregar etiqueta');
     }
+}
+
+function ampliarFoto(src) {
+    document.getElementById('fotoAmpliada').src = src;
+    new bootstrap.Modal(document.getElementById('modalFotoEtiqueta')).show();
 }
 
 async function eliminarEtiqueta(id) {

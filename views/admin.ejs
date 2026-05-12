@@ -338,81 +338,24 @@
             </div>
 
             <div class="tab-pane fade" id="configuracion" role="tabpanel">
-                <div class="row mt-4">
+                <div class="row mt-3">
                     <div class="col-12">
                         <div class="card">
-                            <div class="card-header">
-                                <h5>Configuración Bancaria</h5>
+                            <div class="card-header d-flex justify-content-between align-items-center">
+                                <h5 class="mb-0"><i class="fas fa-university"></i> Cuentas Bancarias <span class="badge bg-light text-dark ms-2" id="contadorBancos">0</span></h5>
+                                <button class="btn btn-light btn-sm" onclick="abrirModalBanco()">
+                                    <i class="fas fa-plus"></i> Nueva Cuenta
+                                </button>
                             </div>
                             <div class="card-body">
-                                <div class="row">
-                                    <div class="col-md-6">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h6 id="tituloFormBanco">Agregar Cuenta Bancaria</h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <form id="formBanco">
-                                                    <input type="hidden" id="bancoId" name="id">
-                                                    <div class="mb-3">
-                                                        <label class="form-label">Compañía</label>
-                                                        <select class="form-select" id="bancoCompanyId" name="company_id" required>
-                                                            <option value="1">Cargando...</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="nombreBanco" class="form-label">Banco</label>
-                                                        <select class="form-select" id="nombreBanco" name="banco" required>
-                                                            <option value="">Seleccionar banco...</option>
-                                                            <option value="BCP">Banco de Crédito del Perú (BCP)</option>
-                                                            <option value="BBVA">BBVA</option>
-                                                            <option value="Scotiabank">Scotiabank</option>
-                                                            <option value="Interbank">Interbank</option>
-                                                            <option value="Banco de la Nación">Banco de la Nación</option>
-                                                            <option value="Banbif">Banbif</option>
-                                                            <option value="Pichincha">Banco Pichincha</option>
-                                                            <option value="Falabella">Banco Falabella</option>
-                                                            <option value="Ripley">Banco Ripley</option>
-                                                            <option value="Otro">Otro</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="tipoCuenta" class="form-label">Tipo de Cuenta</label>
-                                                        <select class="form-select" id="tipoCuenta" name="tipo_cuenta" required>
-                                                            <option value="">Seleccionar tipo...</option>
-                                                            <option value="ahorros">Cuenta de Ahorros</option>
-                                                            <option value="corriente">Cuenta Corriente</option>
-                                                        </select>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="numeroCuenta" class="form-label">Número de Cuenta</label>
-                                                        <input type="text" class="form-control" id="numeroCuenta" name="numero_cuenta" required>
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="cci" class="form-label">CCI (Opcional)</label>
-                                                        <input type="text" class="form-control" id="cci" name="cci" placeholder="Código de Cuenta Interbancario">
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="titular" class="form-label">Titular de la Cuenta</label>
-                                                        <input type="text" class="form-control" id="titular" name="titular" required>
-                                                    </div>
-                                                    <button type="submit" class="btn btn-primary" id="btnBanco">Agregar Cuenta</button>
-                                                    <button type="button" class="btn btn-secondary" id="btnCancelarBanco" style="display:none;">Cancelar</button>
-                                                </form>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class="col-md-6">
-                                        <div class="card">
-                                            <div class="card-header">
-                                                <h6>Cuentas Bancarias Registradas</h6>
-                                            </div>
-                                            <div class="card-body">
-                                                <div id="listaCuentasBancarias"></div>
-                                            </div>
-                                        </div>
+                                <div class="mb-3">
+                                    <div class="input-group">
+                                        <span class="input-group-text"><i class="fas fa-search"></i></span>
+                                        <input type="text" class="form-control" id="buscarBanco" placeholder="Buscar por banco, titular, cuenta...">
                                     </div>
                                 </div>
+                                <div id="listaCuentasBancarias"></div>
+                                <div id="paginacionBancos" class="d-flex justify-content-between align-items-center mt-3"></div>
                             </div>
                         </div>
                     </div>
@@ -597,6 +540,73 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Banco -->
+    <div class="modal fade" id="modalBanco" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="tituloModalBanco"><i class="fas fa-university"></i> Nueva Cuenta Bancaria</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="formBanco">
+                        <input type="hidden" id="bancoId" name="id">
+                        <div class="mb-3">
+                            <label class="form-label">Compañía</label>
+                            <select class="form-select" id="bancoCompanyId" name="company_id" required>
+                                <option value="1">Cargando...</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="nombreBanco" class="form-label">Banco</label>
+                            <select class="form-select" id="nombreBanco" name="banco" required>
+                                <option value="">Seleccionar banco...</option>
+                                <option value="BCP">Banco de Crédito del Perú (BCP)</option>
+                                <option value="BBVA">BBVA</option>
+                                <option value="Scotiabank">Scotiabank</option>
+                                <option value="Interbank">Interbank</option>
+                                <option value="Banco de la Nación">Banco de la Nación</option>
+                                <option value="Banbif">Banbif</option>
+                                <option value="Pichincha">Banco Pichincha</option>
+                                <option value="Falabella">Banco Falabella</option>
+                                <option value="Ripley">Banco Ripley</option>
+                                <option value="Otro">Otro</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="tipoCuenta" class="form-label">Tipo de Cuenta</label>
+                            <select class="form-select" id="tipoCuenta" name="tipo_cuenta" required>
+                                <option value="">Seleccionar tipo...</option>
+                                <option value="ahorros">Cuenta de Ahorros</option>
+                                <option value="corriente">Cuenta Corriente</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label for="numeroCuenta" class="form-label">Número de Cuenta</label>
+                            <input type="text" class="form-control" id="numeroCuenta" name="numero_cuenta" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="cci" class="form-label">CCI (Opcional)</label>
+                            <input type="text" class="form-control" id="cci" name="cci" placeholder="Código de Cuenta Interbancario">
+                        </div>
+                        <div class="mb-3">
+                            <label for="titular" class="form-label">Titular de la Cuenta</label>
+                            <input type="text" class="form-control" id="titular" name="titular" required>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times"></i> Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary" id="btnGuardarBanco">
+                        <i class="fas fa-save"></i> Guardar
+                    </button>
                 </div>
             </div>
         </div>

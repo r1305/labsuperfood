@@ -1371,52 +1371,42 @@ async function cambiarEstado(id, nuevoEstado) {
 }
 
 // ===== FUNCIONES DE CONFIGURACIÓN BANCARIA =====
+let bancosData = [];
+let editandoBanco = false;
+let paginaActualBancos = 1;
+const bancosPorPagina = 10;
+let bancosFiltrados = [];
 
 function inicializarConfiguracionBancaria() {
-    // Botón cancelar banco
-    document.getElementById('btnCancelarBanco').addEventListener('click', function() {
-        cancelarEdicionBanco();
+    document.getElementById('buscarBanco').addEventListener('input', function() {
+        const filtrados = bancosData.filter(b =>
+            b.banco.toLowerCase().includes(this.value.toLowerCase()) ||
+            b.titular.toLowerCase().includes(this.value.toLowerCase()) ||
+            b.numero_cuenta.includes(this.value)
+        );
+        mostrarCuentasBancarias(filtrados);
     });
 
-    // Formulario de banco
-    document.getElementById('formBanco').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(this);
+    document.getElementById('btnGuardarBanco').addEventListener('click', async function() {
+        const form = document.getElementById('formBanco');
+        if (!form.checkValidity()) { form.reportValidity(); return; }
+        const formData = new FormData(form);
         const data = Object.fromEntries(formData);
-        
         try {
-            let response;
-            if (editandoBanco) {
-                response = await fetch(`/configuracion-bancaria/${data.id}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-            } else {
-                response = await fetch('/configuracion-bancaria', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(data)
-                });
-            }
-            
+            const response = await fetch(editandoBanco ? `/configuracion-bancaria/${data.id}` : '/configuracion-bancaria', {
+                method: editandoBanco ? 'PUT' : 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
             const result = await response.json();
-            
             if (result.success) {
-                alert(result.message);
-                this.reset();
-                cancelarEdicionBanco();
+                bootstrap.Modal.getInstance(document.getElementById('modalBanco')).hide();
+                editandoBanco = false;
                 cargarCuentasBancarias();
             } else {
-                alert('Error: ' + result.message);
+                alert(result.message);
             }
         } catch (error) {
-            console.error('Error:', error);
             alert('Error al procesar cuenta bancaria');
         }
     });
@@ -1425,61 +1415,128 @@ function inicializarConfiguracionBancaria() {
 async function cargarCuentasBancarias() {
     try {
         const response = await fetch('/configuracion-bancaria');
-        cuentasBancariasData = await response.json();
-        mostrarCuentasBancarias(cuentasBancariasData);
+        bancosData = await response.json();
+        mostrarCuentasBancarias(bancosData);
     } catch (error) {
         console.error('Error cargando cuentas bancarias:', error);
     }
 }
 
 function mostrarCuentasBancarias(cuentas) {
+    bancosFiltrados = cuentas;
+    paginaActualBancos = 1;
+    renderTablaBancos();
+}
+
+function renderTablaBancos() {
     const lista = document.getElementById('listaCuentasBancarias');
-    lista.innerHTML = '';
-    
-    if (cuentas.length === 0) {
-        lista.innerHTML = '<p class="text-muted">No hay cuentas bancarias registradas</p>';
+    const contador = document.getElementById('contadorBancos');
+    const paginacion = document.getElementById('paginacionBancos');
+
+    if (contador) contador.textContent = bancosFiltrados.length;
+
+    if (bancosFiltrados.length === 0) {
+        lista.innerHTML = `
+            <div class="text-center py-4 text-muted">
+                <i class="fas fa-university fa-3x mb-3 d-block"></i>
+                <p class="mb-0">No hay cuentas bancarias registradas</p>
+                <small>Haz clic en "Nueva Cuenta" para agregar una</small>
+            </div>`;
+        paginacion.innerHTML = '';
         return;
     }
-    
-    cuentas.forEach(cuenta => {
-        const item = document.createElement('div');
-        item.className = 'lista-item mb-3';
-        const estadoBadge = cuenta.activo ? 
-            '<span class="badge bg-success">Activa</span>' : 
-            '<span class="badge bg-secondary">Inactiva</span>';
-        
-        item.innerHTML = `
-            <div class="item-content">
-                <div class="d-flex justify-content-between align-items-start">
-                    <div>
-                        <strong>${cuenta.banco}</strong> ${estadoBadge}
-                        <span class="badge bg-light text-dark ms-1" style="font-size:10px;">${companyData.find(c=>c.id===cuenta.company_id)?.razon_social || 'Compañía #'+cuenta.company_id}</span><br>
-                        <span class="text-muted">Tipo: ${cuenta.tipo_cuenta === 'ahorros' ? 'Ahorros' : 'Corriente'}</span><br>
-                        <span class="text-muted">Cuenta: ${cuenta.numero_cuenta}</span><br>
-                        ${cuenta.cci ? `<span class="text-muted">CCI: ${cuenta.cci}</span><br>` : ''}
-                        <span class="text-muted">Titular: ${cuenta.titular}</span>
-                    </div>
-                    <div class="item-actions">
-                        <button class="btn btn-warning btn-sm" onclick="editarBanco(${cuenta.id})">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button class="btn ${cuenta.activo ? 'btn-secondary' : 'btn-success'} btn-sm" 
-                                onclick="toggleEstadoBanco(${cuenta.id}, ${!cuenta.activo})">
-                            <i class="fas fa-${cuenta.activo ? 'eye-slash' : 'eye'}"></i>
-                        </button>
-                        <button class="btn btn-danger btn-sm" onclick="eliminarBanco(${cuenta.id})">
-                            <i class="fas fa-trash"></i>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-        lista.appendChild(item);
-    });
+
+    const totalPaginas = Math.ceil(bancosFiltrados.length / bancosPorPagina);
+    const inicio = (paginaActualBancos - 1) * bancosPorPagina;
+    const fin = inicio + bancosPorPagina;
+    const paginaData = bancosFiltrados.slice(inicio, fin);
+
+    lista.innerHTML = `
+        <div class="table-responsive mobile-scroll">
+            <table class="table table-hover table-sm">
+                <thead class="table-light">
+                    <tr>
+                        <th class="text-center">#</th>
+                        <th>Banco</th>
+                        <th class="text-center">Tipo</th>
+                        <th>Número de Cuenta</th>
+                        <th class="d-none d-md-table-cell">CCI</th>
+                        <th>Titular</th>
+                        <th>Compañía</th>
+                        <th class="text-center">Estado</th>
+                        <th class="text-center" style="min-width:100px;">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${paginaData.map((b, i) => `
+                        <tr>
+                            <td class="text-center align-middle text-muted">${inicio + i + 1}</td>
+                            <td class="align-middle fw-semibold">${b.banco}</td>
+                            <td class="text-center align-middle">
+                                <span class="badge bg-info">${b.tipo_cuenta === 'ahorros' ? 'Ahorros' : 'Corriente'}</span>
+                            </td>
+                            <td class="align-middle">${b.numero_cuenta}</td>
+                            <td class="align-middle d-none d-md-table-cell text-muted">${b.cci || '-'}</td>
+                            <td class="align-middle">${b.titular}</td>
+                            <td class="align-middle">
+                                <span class="badge bg-light text-dark">${companyData.find(c => c.id === b.company_id)?.razon_social || 'Compañía #' + b.company_id}</span>
+                            </td>
+                            <td class="text-center align-middle">
+                                <span class="badge ${b.activo ? 'bg-success' : 'bg-secondary'}">${b.activo ? 'Activa' : 'Inactiva'}</span>
+                            </td>
+                            <td class="text-center align-middle">
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-warning" onclick="editarBanco(${b.id})" title="Editar">
+                                        <i class="fas fa-edit"></i>
+                                    </button>
+                                    <button class="btn ${b.activo ? 'btn-secondary' : 'btn-success'}" onclick="toggleEstadoBanco(${b.id}, ${!b.activo})" title="${b.activo ? 'Desactivar' : 'Activar'}">
+                                        <i class="fas fa-${b.activo ? 'eye-slash' : 'eye'}"></i>
+                                    </button>
+                                    <button class="btn btn-danger" onclick="eliminarBanco(${b.id})" title="Eliminar">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>`).join('')}
+                </tbody>
+            </table>
+        </div>`;
+
+    if (totalPaginas <= 1) {
+        paginacion.innerHTML = `<small class="text-muted">Mostrando ${bancosFiltrados.length} cuenta(s)</small>`;
+        return;
+    }
+
+    let btnsPaginas = '';
+    for (let i = 1; i <= totalPaginas; i++) {
+        btnsPaginas += `<button class="btn btn-sm ${i === paginaActualBancos ? 'btn-primary' : 'btn-outline-secondary'}" onclick="cambiarPaginaBancos(${i})">${i}</button>`;
+    }
+    paginacion.innerHTML = `
+        <small class="text-muted">Mostrando ${inicio + 1}-${Math.min(fin, bancosFiltrados.length)} de ${bancosFiltrados.length}</small>
+        <div class="btn-group btn-group-sm">
+            <button class="btn btn-outline-secondary" onclick="cambiarPaginaBancos(${paginaActualBancos - 1})" ${paginaActualBancos === 1 ? 'disabled' : ''}><i class="fas fa-chevron-left"></i></button>
+            ${btnsPaginas}
+            <button class="btn btn-outline-secondary" onclick="cambiarPaginaBancos(${paginaActualBancos + 1})" ${paginaActualBancos === totalPaginas ? 'disabled' : ''}><i class="fas fa-chevron-right"></i></button>
+        </div>`;
+}
+
+function cambiarPaginaBancos(pagina) {
+    const totalPaginas = Math.ceil(bancosFiltrados.length / bancosPorPagina);
+    if (pagina < 1 || pagina > totalPaginas) return;
+    paginaActualBancos = pagina;
+    renderTablaBancos();
+}
+
+function abrirModalBanco() {
+    document.getElementById('formBanco').reset();
+    document.getElementById('bancoId').value = '';
+    document.getElementById('tituloModalBanco').innerHTML = '<i class="fas fa-university"></i> Nueva Cuenta Bancaria';
+    editandoBanco = false;
+    new bootstrap.Modal(document.getElementById('modalBanco')).show();
 }
 
 function editarBanco(id) {
-    const cuenta = cuentasBancariasData.find(c => c.id === id);
+    const cuenta = bancosData.find(c => c.id === id);
     if (cuenta) {
         document.getElementById('bancoId').value = cuenta.id;
         document.getElementById('bancoCompanyId').value = cuenta.company_id || 1;
@@ -1488,18 +1545,13 @@ function editarBanco(id) {
         document.getElementById('numeroCuenta').value = cuenta.numero_cuenta;
         document.getElementById('cci').value = cuenta.cci || '';
         document.getElementById('titular').value = cuenta.titular;
-        document.getElementById('tituloFormBanco').textContent = 'Editar Cuenta Bancaria';
-        document.getElementById('btnBanco').textContent = 'Actualizar Cuenta';
-        document.getElementById('btnCancelarBanco').style.display = 'inline-block';
+        document.getElementById('tituloModalBanco').innerHTML = '<i class="fas fa-edit"></i> Editar Cuenta Bancaria';
         editandoBanco = true;
+        new bootstrap.Modal(document.getElementById('modalBanco')).show();
     }
 }
 
 function cancelarEdicionBanco() {
-    document.getElementById('formBanco').reset();
-    document.getElementById('tituloFormBanco').textContent = 'Agregar Cuenta Bancaria';
-    document.getElementById('btnBanco').textContent = 'Agregar Cuenta';
-    document.getElementById('btnCancelarBanco').style.display = 'none';
     editandoBanco = false;
 }
 
@@ -1527,22 +1579,13 @@ async function toggleEstadoBanco(id, nuevoEstado) {
 }
 
 async function eliminarBanco(id) {
-    if (confirm('¿Estás seguro de que deseas eliminar esta cuenta bancaria?')) {
+    if (confirm('¿Eliminar esta cuenta bancaria?')) {
         try {
-            const response = await fetch(`/configuracion-bancaria/${id}`, {
-                method: 'DELETE'
-            });
-            
+            const response = await fetch(`/configuracion-bancaria/${id}`, { method: 'DELETE' });
             const result = await response.json();
-            
-            if (result.success) {
-                alert(result.message);
-                cargarCuentasBancarias();
-            } else {
-                alert('Error: ' + result.message);
-            }
+            if (result.success) cargarCuentasBancarias();
+            else alert('Error: ' + result.message);
         } catch (error) {
-            console.error('Error:', error);
             alert('Error al eliminar cuenta bancaria');
         }
     }

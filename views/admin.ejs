@@ -12,9 +12,7 @@
     <div class="container-fluid mt-2">
         <div class="row">
             <div class="col-12">
-                <h1 class="text-center mb-2">Panel de Administración</h1>
-                <h2 class="text-center h5 text-primary mb-1">Maquila Lima Lab</h2>
-                <p class="text-center text-muted mb-3 small">RUC 20607583677</p>
+                <h1 class="text-center mb-3">Panel de Administración</h1>
             </div>
         </div>
         
@@ -356,6 +354,12 @@
                                             <div class="card-body">
                                                 <form id="formBanco">
                                                     <input type="hidden" id="bancoId" name="id">
+                                                    <div class="mb-3">
+                                                        <label class="form-label">Compañía</label>
+                                                        <select class="form-select" id="bancoCompanyId" name="company_id" required>
+                                                            <option value="1">Cargando...</option>
+                                                        </select>
+                                                    </div>
                                                     <div class="mb-3">
                                                         <label for="nombreBanco" class="form-label">Banco</label>
                                                         <select class="form-select" id="nombreBanco" name="banco" required>

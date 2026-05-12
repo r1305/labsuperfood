@@ -475,14 +475,12 @@ app.get('/cotizaciones/:id/pdf-simple', async (req, res) => {
 // Rutas para configuración bancaria
 app.post('/configuracion-bancaria', async (req, res) => {
   try {
-    const { banco, tipo_cuenta, numero_cuenta, cci, titular } = req.body;
+    const { banco, tipo_cuenta, numero_cuenta, cci, titular, company_id } = req.body;
     const connection = await createConnection();
-    
     await connection.execute(
-      'INSERT INTO configuracion_bancaria (banco, tipo_cuenta, numero_cuenta, cci, titular) VALUES (?, ?, ?, ?, ?)',
-      [banco, tipo_cuenta, numero_cuenta, cci || null, titular]
+      'INSERT INTO configuracion_bancaria (banco, tipo_cuenta, numero_cuenta, cci, titular, company_id) VALUES (?, ?, ?, ?, ?, ?)',
+      [banco, tipo_cuenta, numero_cuenta, cci || null, titular, company_id || 1]
     );
-    
     await connection.end();
     res.json({ success: true, message: 'Cuenta bancaria agregada correctamente' });
   } catch (error) {
@@ -506,14 +504,12 @@ app.get('/configuracion-bancaria', async (req, res) => {
 app.put('/configuracion-bancaria/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { banco, tipo_cuenta, numero_cuenta, cci, titular } = req.body;
+    const { banco, tipo_cuenta, numero_cuenta, cci, titular, company_id } = req.body;
     const connection = await createConnection();
-    
     await connection.execute(
-      'UPDATE configuracion_bancaria SET banco = ?, tipo_cuenta = ?, numero_cuenta = ?, cci = ?, titular = ? WHERE id = ?',
-      [banco, tipo_cuenta, numero_cuenta, cci || null, titular, id]
+      'UPDATE configuracion_bancaria SET banco = ?, tipo_cuenta = ?, numero_cuenta = ?, cci = ?, titular = ?, company_id = ? WHERE id = ?',
+      [banco, tipo_cuenta, numero_cuenta, cci || null, titular, company_id || 1, id]
     );
-    
     await connection.end();
     res.json({ success: true, message: 'Cuenta bancaria actualizada correctamente' });
   } catch (error) {

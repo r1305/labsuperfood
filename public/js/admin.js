@@ -1452,7 +1452,8 @@ function mostrarCuentasBancarias(cuentas) {
             <div class="item-content">
                 <div class="d-flex justify-content-between align-items-start">
                     <div>
-                        <strong>${cuenta.banco}</strong> ${estadoBadge}<br>
+                        <strong>${cuenta.banco}</strong> ${estadoBadge}
+                        <span class="badge bg-light text-dark ms-1" style="font-size:10px;">${companyData.find(c=>c.id===cuenta.company_id)?.razon_social || 'Compañía #'+cuenta.company_id}</span><br>
                         <span class="text-muted">Tipo: ${cuenta.tipo_cuenta === 'ahorros' ? 'Ahorros' : 'Corriente'}</span><br>
                         <span class="text-muted">Cuenta: ${cuenta.numero_cuenta}</span><br>
                         ${cuenta.cci ? `<span class="text-muted">CCI: ${cuenta.cci}</span><br>` : ''}
@@ -1481,6 +1482,7 @@ function editarBanco(id) {
     const cuenta = cuentasBancariasData.find(c => c.id === id);
     if (cuenta) {
         document.getElementById('bancoId').value = cuenta.id;
+        document.getElementById('bancoCompanyId').value = cuenta.company_id || 1;
         document.getElementById('nombreBanco').value = cuenta.banco;
         document.getElementById('tipoCuenta').value = cuenta.tipo_cuenta;
         document.getElementById('numeroCuenta').value = cuenta.numero_cuenta;
@@ -1748,7 +1750,8 @@ async function cargarCompanyEnCotizacion() {
         const selects = [
             document.getElementById('selectCompanyCotizacion'),
             document.getElementById('clienteCompanyId'),
-            document.getElementById('productoCompanyId')
+            document.getElementById('productoCompanyId'),
+            document.getElementById('bancoCompanyId')
         ];
         const options = companies.length > 0
             ? companies.map(c => `<option value="${c.id}">${c.razon_social} (${c.ruc_dni})</option>`).join('')

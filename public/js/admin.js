@@ -1333,140 +1333,43 @@ async function mostrarInfoBancaria() {
 
 // Función para descargar PDF
 function descargarPDF(id) {
-    // Mostrar indicador de carga
     const btn = event.target.closest('button');
     const iconoOriginal = btn.innerHTML;
     btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
     btn.disabled = true;
     
-    // Detectar tipo de dispositivo
-    const esMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const esIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    
     const url = `/cotizaciones/${id}/pdf`;
-    const urlSimple = `/cotizaciones/${id}/pdf-simple`;
     const filename = `Cotizacion-${id.toString().padStart(6, '0')}.pdf`;
     
-    if (esMobile) {
-        console.log('Dispositivo móvil detectado, intentando descarga...');
-        
-        // Para móviles: intentar PDF primero, luego HTML como respaldo
-        fetch(url, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/pdf'
-            }
-        })
+    fetch(url, { headers: { 'Accept': 'application/pdf' } })
         .then(response => {
-            console.log('Respuesta recibida:', response.status, response.headers.get('content-type'));
-            
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}`);
-            }
-            
-            const contentType = response.headers.get('content-type');
-            if (contentType && contentType.includes('application/pdf')) {
-                // Es un PDF válido
-                return response.blob().then(blob => {
-                    if (blob.size === 0) {
-                        throw new Error('PDF vacío');
-                    }
-                    
-                    // Crear URL y abrir
-                    const blobUrl = URL.createObjectURL(blob);
-                    window.open(blobUrl, '_blank');
-                    
-                    // Limpiar después de un tiempo
-                    setTimeout(() => {
-                        URL.revokeObjectURL(blobUrl);
-                    }, 10000);
-                    
-                    console.log('PDF abierto exitosamente');
-                });
-            } else {
-                // No es PDF, probablemente un error
-                throw new Error('Respuesta no es PDF');
-            }
-        })
-        .catch(error => {
-            console.log('Error con PDF, intentando versión HTML:', error.message);
-            
-            // Como respaldo, abrir versión HTML
-            window.open(urlSimple, '_blank');
-            
-            // Mostrar mensaje al usuario
-            setTimeout(() => {
-                alert('Se abrió la cotización en formato web. Puedes usar la opción "Imprimir" de tu navegador para guardarla como PDF.');
-            }, 1000);
-        })
-        .finally(() => {
-            // Restaurar botón
-            setTimeout(() => {
-                btn.innerHTML = iconoOriginal;
-                btn.disabled = false;
-            }, 1500);
-        });
-    } else {
-        // Para desktop: usar fetch con mejor control
-        fetch(url, {
-            method: 'GET',
-            headers: {
-                'Accept': 'application/pdf'
-            }
-        })
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-            }
-            
-            // Verificar que realmente es un PDF
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
             const contentType = response.headers.get('content-type');
             if (!contentType || !contentType.includes('application/pdf')) {
-                throw new Error('El servidor no devolvió un PDF válido');
+                throw new Error('Respuesta no es PDF');
             }
-            
             return response.blob();
         })
         .then(blob => {
-            // Verificar que el blob no está vacío
-            if (blob.size === 0) {
-                throw new Error('El PDF generado está vacío');
-            }
-            
-            // Crear URL del blob
-            const blobUrl = window.URL.createObjectURL(blob);
-            
-            // Crear enlace temporal para descarga
+            const blobUrl = URL.createObjectURL(blob);
             const link = document.createElement('a');
             link.href = blobUrl;
             link.download = filename;
-            
-            // Agregar al DOM y hacer clic
+            link.target = '_blank';
             document.body.appendChild(link);
             link.click();
-            
-            // Limpiar
             document.body.removeChild(link);
-            window.URL.revokeObjectURL(blobUrl);
-            
-            console.log('PDF descargado exitosamente');
+            setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
         })
         .catch(error => {
-            console.error('Error en descarga:', error);
-            
-            // Como respaldo, intentar abrir en nueva ventana
-            console.log('Intentando descarga alternativa...');
+            console.error('Error descargando PDF:', error);
+            // Respaldo: abrir en nueva ventana
             window.open(url, '_blank');
-            
-            // Mostrar mensaje al usuario
-            alert('Se abrió el PDF en una nueva ventana. Si no se descargó automáticamente, usa Ctrl+S para guardarlo.');
         })
         .finally(() => {
-            // Restaurar botón
             btn.innerHTML = iconoOriginal;
             btn.disabled = false;
         });
-    }
 }
 
 // Función para editar cotización

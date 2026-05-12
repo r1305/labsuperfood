@@ -1,7 +1,8 @@
 const express = require('express');
 const { createConnection } = require('./database');
 const path = require('path');
-const puppeteer = require('puppeteer');
+const puppeteer = require('puppeteer-core');
+const chromium = require('@sparticuz/chromium');
 const fs = require('fs');
 
 const app = express();
@@ -215,14 +216,10 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
   
   try {
     const { id } = req.params;
-    console.log('=== GENERANDO PDF ===');
-    console.log('ID Cotización:', id);
-    console.log('User-Agent:', req.headers['user-agent']);
+    console.log('=== GENERANDO PDF ===', id);
     
     connection = await createConnection();
-    console.log('Conexión a BD establecida');
     
-    // Obtener cotización con cliente
     const [cotizacion] = await connection.execute(`
       SELECT c.*, cl.razon_social, cl.dni_ruc, cl.distrito, cl.direccion, cl.telefono
       FROM cotizaciones c 
@@ -231,16 +228,10 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
     `, [id]);
     
     if (cotizacion.length === 0) {
-      console.log('Cotización no encontrada:', id);
       await connection.end();
-      res.status(404);
-      res.setHeader('Content-Type', 'text/plain');
-      return res.end('Cotización no encontrada');
+      return res.status(404).send('Cotización no encontrada');
     }
     
-    console.log('Cotización encontrada:', cotizacion[0].id);
-    
-    // Obtener detalles
     const [detalles] = await connection.execute(`
       SELECT dc.*, p.nombre as producto_nombre
       FROM detalle_cotizaciones dc
@@ -248,203 +239,68 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
       WHERE dc.cotizacion_id = ?
     `, [id]);
     
-    console.log('Detalles encontrados:', detalles.length);
-    
-    // Obtener cuentas bancarias activas
     const [cuentasBancarias] = await connection.execute(`
       SELECT * FROM configuracion_bancaria WHERE activo = TRUE ORDER BY created_at ASC
     `);
     
-    console.log('Cuentas bancarias:', cuentasBancarias.length);
-    
     await connection.end();
     connection = null;
-    
-    // Detectar si es móvil para usar estrategia diferente
-    const userAgent = req.headers['user-agent'] || '';
-    const esMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
-    
-    console.log('Es móvil:', esMobile);
-    
-    // Para móviles, intentar Puppeteer pero con manejo de errores robusto
-    if (esMobile) {
-      try {
-        console.log('Intentando Puppeteer para móvil...');
-        
-        // Renderizar HTML
-        const html = await new Promise((resolve, reject) => {
-          res.app.render('cotizacion-pdf', {
-            cotizacion: cotizacion[0],
-            detalles: detalles,
-            cuentasBancarias: cuentasBancarias
-          }, (err, html) => {
-            if (err) reject(err);
-            else resolve(html);
-          });
-        });
-        
-        // Configuración mínima para móviles
-        browser = await puppeteer.launch({
-          headless: 'new',
-          args: ['--no-sandbox', '--disable-setuid-sandbox'],
-          timeout: 10000
-        });
-        
-        const page = await browser.newPage();
-        await page.setContent(html, { 
-          waitUntil: 'domcontentloaded',
-          timeout: 10000
-        });
-        
-        const pdf = await page.pdf({
-          format: 'A4',
-          margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' },
-          printBackground: true,
-          timeout: 10000
-        });
-        
-        await browser.close();
-        browser = null;
-        
-        // Enviar PDF exitoso
-        res.setHeader('Content-Type', 'application/pdf');
-        res.setHeader('Content-Length', pdf.length);
-        res.setHeader('Content-Disposition', `inline; filename="Cotizacion-${id.toString().padStart(6, '0')}.pdf"`);
-        res.end(pdf);
-        
-        console.log('=== PDF MÓVIL GENERADO EXITOSAMENTE ===');
-        return;
-        
-      } catch (puppeteerError) {
-        console.log('=== PUPPETEER FALLÓ EN MÓVIL ===');
-        console.log('Error Puppeteer:', puppeteerError.message);
-        
-        if (browser) {
-          try {
-            await browser.close();
-          } catch (e) {}
-        }
-        
-        // Si Puppeteer falla en móvil, redirigir a versión HTML
-        console.log('Redirigiendo a versión HTML...');
-        return res.redirect(`/cotizaciones/${id}/pdf-simple`);
-      }
-    }
-    
-    // Para desktop o si no es móvil, usar Puppeteer completo
-    console.log('Generando PDF para desktop...');
     
     // Renderizar HTML
     const html = await new Promise((resolve, reject) => {
       res.app.render('cotizacion-pdf', {
         cotizacion: cotizacion[0],
-        detalles: detalles,
-        cuentasBancarias: cuentasBancarias
-      }, (err, html) => {
-        if (err) {
-          console.error('Error renderizando template:', err);
-          reject(err);
-        } else {
-          console.log('HTML renderizado exitosamente, longitud:', html.length);
-          resolve(html);
-        }
-      });
+        detalles,
+        cuentasBancarias
+      }, (err, html) => err ? reject(err) : resolve(html));
     });
     
-    console.log('Iniciando Puppeteer para desktop...');
+    console.log('Iniciando Chromium portable...');
     
-    // Configuración completa para desktop
+    // Usar Chromium portable (funciona en cualquier servidor)
     browser = await puppeteer.launch({
-      headless: 'new',
-      args: [
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-dev-shm-usage',
-        '--disable-gpu',
-        '--no-first-run',
-        '--no-zygote',
-        '--disable-background-timer-throttling',
-        '--disable-backgrounding-occluded-windows',
-        '--disable-renderer-backgrounding'
-      ]
+      args: chromium.args,
+      defaultViewport: chromium.defaultViewport,
+      executablePath: await chromium.executablePath(),
+      headless: chromium.headless
     });
     
     const page = await browser.newPage();
-    await page.setViewport({ width: 1200, height: 800 });
-    await page.setContent(html, { 
-      waitUntil: 'domcontentloaded',
-      timeout: 15000
-    });
+    await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 15000 });
     
-    console.log('Generando PDF...');
     const pdf = await page.pdf({
       format: 'A4',
-      margin: {
-        top: '10mm',
-        right: '10mm',
-        bottom: '10mm',
-        left: '10mm'
-      },
+      margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' },
       printBackground: true,
-      preferCSSPageSize: true,
-      timeout: 15000
+      preferCSSPageSize: true
     });
     
     await browser.close();
     browser = null;
     
-    console.log('PDF generado exitosamente, tamaño:', pdf.length, 'bytes');
+    console.log('PDF generado exitosamente:', pdf.length, 'bytes');
     
-    // Configurar headers y enviar PDF
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Length', pdf.length);
     res.setHeader('Content-Disposition', `inline; filename="Cotizacion-${id.toString().padStart(6, '0')}.pdf"`);
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-    res.setHeader('Pragma', 'no-cache');
-    res.setHeader('Expires', '0');
-    
+    res.setHeader('Cache-Control', 'no-cache');
     res.end(pdf);
-    console.log('=== PDF ENVIADO EXITOSAMENTE ===');
+    
+    console.log('=== PDF ENVIADO ===');
     
   } catch (error) {
-    console.error('=== ERROR GENERANDO PDF ===');
-    console.error('Error:', error.message);
-    console.error('Stack:', error.stack);
+    console.error('=== ERROR PDF ===', error.message);
     
     if (browser) {
-      try {
-        console.log('Cerrando browser...');
-        await browser.close();
-      } catch (closeError) {
-        console.error('Error cerrando browser:', closeError);
-      }
+      try { await browser.close(); } catch (e) {}
     }
-    
     if (connection) {
-      try {
-        console.log('Cerrando conexión BD...');
-        await connection.end();
-      } catch (closeError) {
-        console.error('Error cerrando conexión:', closeError);
-      }
+      try { await connection.end(); } catch (e) {}
     }
     
-    // Si es un error de Puppeteer/Chrome, redirigir a HTML
-    if (error.message.includes('Failed to launch') || 
-        error.message.includes('chrome') || 
-        error.message.includes('browser process')) {
-      console.log('Error de Puppeteer detectado, redirigiendo a HTML...');
-      return res.redirect(`/cotizaciones/${id}/pdf-simple`);
-    }
-    
-    // Para otros errores, enviar mensaje de error
-    if (!res.headersSent) {
-      res.status(500);
-      res.setHeader('Content-Type', 'text/plain');
-      res.end(`Error generando PDF: ${error.message}`);
-    }
-    
-    console.log('=== FIN ERROR PDF ===');
+    // Redirigir a versión HTML como respaldo
+    console.log('Redirigiendo a versión HTML...');
+    res.redirect(`/cotizaciones/${id}/pdf-simple`);
   }
 });
 

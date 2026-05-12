@@ -260,8 +260,81 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
     await connection.end();
     connection = null;
     
+    // Detectar si es móvil para usar estrategia diferente
+    const userAgent = req.headers['user-agent'] || '';
+    const esMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    
+    console.log('Es móvil:', esMobile);
+    
+    // Para móviles, intentar Puppeteer pero con manejo de errores robusto
+    if (esMobile) {
+      try {
+        console.log('Intentando Puppeteer para móvil...');
+        
+        // Renderizar HTML
+        const html = await new Promise((resolve, reject) => {
+          res.app.render('cotizacion-pdf', {
+            cotizacion: cotizacion[0],
+            detalles: detalles,
+            cuentasBancarias: cuentasBancarias
+          }, (err, html) => {
+            if (err) reject(err);
+            else resolve(html);
+          });
+        });
+        
+        // Configuración mínima para móviles
+        browser = await puppeteer.launch({
+          headless: 'new',
+          args: ['--no-sandbox', '--disable-setuid-sandbox'],
+          timeout: 10000
+        });
+        
+        const page = await browser.newPage();
+        await page.setContent(html, { 
+          waitUntil: 'domcontentloaded',
+          timeout: 10000
+        });
+        
+        const pdf = await page.pdf({
+          format: 'A4',
+          margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' },
+          printBackground: true,
+          timeout: 10000
+        });
+        
+        await browser.close();
+        browser = null;
+        
+        // Enviar PDF exitoso
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Length', pdf.length);
+        res.setHeader('Content-Disposition', `inline; filename="Cotizacion-${id.toString().padStart(6, '0')}.pdf"`);
+        res.end(pdf);
+        
+        console.log('=== PDF MÓVIL GENERADO EXITOSAMENTE ===');
+        return;
+        
+      } catch (puppeteerError) {
+        console.log('=== PUPPETEER FALLÓ EN MÓVIL ===');
+        console.log('Error Puppeteer:', puppeteerError.message);
+        
+        if (browser) {
+          try {
+            await browser.close();
+          } catch (e) {}
+        }
+        
+        // Si Puppeteer falla en móvil, redirigir a versión HTML
+        console.log('Redirigiendo a versión HTML...');
+        return res.redirect(`/cotizaciones/${id}/pdf-simple`);
+      }
+    }
+    
+    // Para desktop o si no es móvil, usar Puppeteer completo
+    console.log('Generando PDF para desktop...');
+    
     // Renderizar HTML
-    console.log('Renderizando HTML...');
     const html = await new Promise((resolve, reject) => {
       res.app.render('cotizacion-pdf', {
         cotizacion: cotizacion[0],
@@ -278,15 +351,10 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
       });
     });
     
-    // Detectar si es móvil para ajustar configuración de Puppeteer
-    const userAgent = req.headers['user-agent'] || '';
-    const esMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent);
+    console.log('Iniciando Puppeteer para desktop...');
     
-    console.log('Es móvil:', esMobile);
-    console.log('Iniciando Puppeteer...');
-    
-    // Configuración de Puppeteer optimizada
-    const puppeteerConfig = {
+    // Configuración completa para desktop
+    browser = await puppeteer.launch({
       headless: 'new',
       args: [
         '--no-sandbox',
@@ -299,28 +367,14 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
         '--disable-backgrounding-occluded-windows',
         '--disable-renderer-backgrounding'
       ]
-    };
-    
-    // Para móviles, usar configuración más simple
-    if (esMobile) {
-      puppeteerConfig.args = ['--no-sandbox', '--disable-setuid-sandbox'];
-    }
-    
-    browser = await puppeteer.launch(puppeteerConfig);
-    console.log('Puppeteer iniciado');
+    });
     
     const page = await browser.newPage();
-    console.log('Nueva página creada');
-    
-    // Configurar página
     await page.setViewport({ width: 1200, height: 800 });
-    console.log('Viewport configurado');
-    
     await page.setContent(html, { 
       waitUntil: 'domcontentloaded',
       timeout: 15000
     });
-    console.log('Contenido HTML cargado');
     
     console.log('Generando PDF...');
     const pdf = await page.pdf({
@@ -375,7 +429,15 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
       }
     }
     
-    // Enviar error detallado
+    // Si es un error de Puppeteer/Chrome, redirigir a HTML
+    if (error.message.includes('Failed to launch') || 
+        error.message.includes('chrome') || 
+        error.message.includes('browser process')) {
+      console.log('Error de Puppeteer detectado, redirigiendo a HTML...');
+      return res.redirect(`/cotizaciones/${id}/pdf-simple`);
+    }
+    
+    // Para otros errores, enviar mensaje de error
     if (!res.headersSent) {
       res.status(500);
       res.setHeader('Content-Type', 'text/plain');
@@ -392,7 +454,7 @@ app.get('/cotizaciones/:id/pdf-simple', async (req, res) => {
   
   try {
     const { id } = req.params;
-    console.log('=== GENERANDO PDF SIMPLE PARA MÓVIL ===');
+    console.log('=== GENERANDO HTML SIMPLE PARA MÓVIL ===');
     console.log('ID Cotización:', id);
     
     connection = await createConnection();
@@ -409,7 +471,14 @@ app.get('/cotizaciones/:id/pdf-simple', async (req, res) => {
       await connection.end();
       res.status(404);
       res.setHeader('Content-Type', 'text/html');
-      return res.end('<h1>Cotización no encontrada</h1>');
+      return res.end(`
+        <!DOCTYPE html>
+        <html><head><title>Error</title></head>
+        <body style="font-family: Arial; text-align: center; padding: 50px;">
+          <h1>Cotización no encontrada</h1>
+          <p>La cotización #${id} no existe en el sistema.</p>
+        </body></html>
+      `);
     }
     
     // Obtener detalles
@@ -427,16 +496,99 @@ app.get('/cotizaciones/:id/pdf-simple', async (req, res) => {
     
     await connection.end();
     
-    // Renderizar HTML directamente (sin PDF)
-    res.setHeader('Content-Type', 'text/html');
+    // Renderizar HTML con estilos de impresión optimizados
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'no-cache');
     
-    res.render('cotizacion-pdf', {
-      cotizacion: cotizacion[0],
-      detalles: detalles,
-      cuentasBancarias: cuentasBancarias
+    // Renderizar template con estilos adicionales para impresión
+    const html = await new Promise((resolve, reject) => {
+      res.app.render('cotizacion-pdf', {
+        cotizacion: cotizacion[0],
+        detalles: detalles,
+        cuentasBancarias: cuentasBancarias
+      }, (err, html) => {
+        if (err) {
+          reject(err);
+        } else {
+          // Agregar estilos adicionales para impresión móvil
+          const htmlConEstilos = html.replace(
+            '</head>',
+            `
+            <style>
+              @media print {
+                body { margin: 0 !important; }
+                .no-print { display: none !important; }
+                .footer { position: static !important; }
+              }
+              .print-instructions {
+                background: #e3f2fd;
+                border: 1px solid #2196f3;
+                border-radius: 5px;
+                padding: 15px;
+                margin: 20px 0;
+                text-align: center;
+                font-family: Arial, sans-serif;
+              }
+              .print-button {
+                background: #2196f3;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 5px;
+                font-size: 16px;
+                cursor: pointer;
+                margin: 10px;
+              }
+              @media (max-width: 768px) {
+                .print-instructions {
+                  margin: 10px;
+                  padding: 10px;
+                  font-size: 14px;
+                }
+              }
+            </style>
+            <script>
+              function imprimirPDF() {
+                window.print();
+              }
+              
+              // Auto-mostrar diálogo de impresión en móviles después de cargar
+              window.addEventListener('load', function() {
+                const esMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+                if (esMobile) {
+                  setTimeout(function() {
+                    if (confirm('¿Deseas guardar esta cotización como PDF?\n\nPresiona OK para abrir el menú de impresión.')) {
+                      window.print();
+                    }
+                  }, 1000);
+                }
+              });
+            </script>
+            </head>`
+          );
+          
+          // Agregar instrucciones de impresión al inicio del body
+          const htmlFinal = htmlConEstilos.replace(
+            '<body>',
+            `<body>
+            <div class="print-instructions no-print">
+              <h3 style="margin-top: 0; color: #1976d2;">📱 Versión Móvil - Cotización #${id}</h3>
+              <p>Para guardar como PDF, usa la opción <strong>"Imprimir"</strong> de tu navegador y selecciona <strong>"Guardar como PDF"</strong>.</p>
+              <button class="print-button" onclick="imprimirPDF()">
+                🖨️ Imprimir / Guardar PDF
+              </button>
+              <p style="font-size: 12px; color: #666; margin-bottom: 0;">
+                En la configuración de impresión, asegúrate de seleccionar "Incluir gráficos de fondo" para mejor calidad.
+              </p>
+            </div>`
+          );
+          
+          resolve(htmlFinal);
+        }
+      });
     });
     
+    res.send(html);
     console.log('=== HTML SIMPLE ENVIADO ===');
     
   } catch (error) {
@@ -452,7 +604,15 @@ app.get('/cotizaciones/:id/pdf-simple', async (req, res) => {
     
     res.status(500);
     res.setHeader('Content-Type', 'text/html');
-    res.end(`<h1>Error: ${error.message}</h1>`);
+    res.end(`
+      <!DOCTYPE html>
+      <html><head><title>Error</title></head>
+      <body style="font-family: Arial; text-align: center; padding: 50px;">
+        <h1>Error del Servidor</h1>
+        <p>No se pudo generar la cotización: ${error.message}</p>
+        <button onclick="history.back()" style="padding: 10px 20px; font-size: 16px;">Volver</button>
+      </body></html>
+    `);
   }
 });
 

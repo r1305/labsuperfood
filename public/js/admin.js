@@ -218,7 +218,7 @@ function renderTablaProductos() {
             <table class="table table-hover table-sm">
                 <thead class="table-light">
                     <tr>
-                        <th>#</th>
+                        <th class="text-center">#</th>
                         <th>Nombre</th>
                         <th class="text-center" style="min-width:120px;">Precio</th>
                         <th class="text-center" style="min-width:90px;">Acciones</th>

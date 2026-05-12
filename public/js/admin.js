@@ -27,6 +27,9 @@ document.addEventListener('DOMContentLoaded', function() {
     inicializarCotizacion();
     inicializarListaCotizaciones();
     inicializarConfiguracionBancaria();
+    
+    // Inicializar funciones móviles
+    inicializarMovil();
 
     // Buscadores productos y clientes (tabs originales)
     document.getElementById('buscarProducto').addEventListener('input', function() {
@@ -815,7 +818,7 @@ async function verDetalleCotizacion(id) {
 function mostrarModalDetalle(cotizacion, detalles) {
     let detalleHtml = `
         <div class="modal fade" id="modalDetalle" tabindex="-1">
-            <div class="modal-dialog modal-lg">
+            <div class="modal-dialog modal-xl">
                 <div class="modal-content">
                     <div class="modal-header">
                         <h5 class="modal-title">Cotización #${cotizacion.id}</h5>
@@ -838,17 +841,18 @@ function mostrarModalDetalle(cotizacion, detalles) {
                         </div>
                         
                         <h6>Productos:</h6>
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>Producto</th>
-                                    <th class="text-center">Precio Unit.</th>
-                                    <th class="text-center">Cantidad</th>
-                                    <th class="text-center">Total</th>
-                                    <th class="text-center">Por Facturar</th>
-                                </tr>
-                            </thead>
-                            <tbody>
+                        <div class="table-responsive mobile-scroll">
+                            <table class="table table-sm table-bordered">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="min-width: 200px;">Producto</th>
+                                        <th class="text-center" style="min-width: 100px;">Precio Unit.</th>
+                                        <th class="text-center" style="min-width: 80px;">Cantidad</th>
+                                        <th class="text-center" style="min-width: 100px;">Total</th>
+                                        <th class="text-center" style="min-width: 100px;">Por Facturar</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
     `;
     
     detalles.forEach(detalle => {
@@ -866,27 +870,30 @@ function mostrarModalDetalle(cotizacion, detalles) {
     detalleHtml += `
                             </tbody>
                         </table>
+                        </div>
                         
-                                <div class="row mt-3">
-                            <div class="col-md-6 offset-md-6">
-                                <table class="table table-sm">
-                                    <tr>
-                                        <td><strong>Total:</strong></td>
-                                        <td class="text-end"><strong>S/ ${parseFloat(cotizacion.total).toFixed(2)}</strong></td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Por Facturar:</strong></td>
-                                        <td class="text-end"><strong>S/ ${parseFloat(cotizacion.total).toFixed(2)}</strong></td>
-                                    </tr>
-                                    <tr>
-                                        <td>Abono:</td>
-                                        <td class="text-end">S/ ${parseFloat(cotizacion.abono).toFixed(2)}</td>
-                                    </tr>
-                                    <tr>
-                                        <td><strong>Saldo:</strong></td>
-                                        <td class="text-end"><strong>S/ ${parseFloat(cotizacion.saldo).toFixed(2)}</strong></td>
-                                    </tr>
-                                </table>
+                        <div class="row mt-3">
+                            <div class="col-lg-6 offset-lg-6 col-md-8 offset-md-4">
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered">
+                                        <tr class="table-light">
+                                            <td><strong>Total:</strong></td>
+                                            <td class="text-end"><strong>S/ ${parseFloat(cotizacion.total).toFixed(2)}</strong></td>
+                                        </tr>
+                                        <tr class="table-light">
+                                            <td><strong>Por Facturar:</strong></td>
+                                            <td class="text-end"><strong>S/ ${parseFloat(cotizacion.total).toFixed(2)}</strong></td>
+                                        </tr>
+                                        <tr>
+                                            <td>Abono:</td>
+                                            <td class="text-end">S/ ${parseFloat(cotizacion.abono).toFixed(2)}</td>
+                                        </tr>
+                                        <tr class="table-primary">
+                                            <td><strong>Saldo:</strong></td>
+                                            <td class="text-end"><strong>S/ ${parseFloat(cotizacion.saldo).toFixed(2)}</strong></td>
+                                        </tr>
+                                    </table>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1254,4 +1261,104 @@ async function editarCotizacion(id) {
         console.error('Error:', error);
         alert('Error al cargar cotización para edición');
     }
+}
+
+// ===== FUNCIONES MÓVILES =====
+
+function inicializarMovil() {
+    // Detectar si es dispositivo móvil
+    const esMobile = window.innerWidth <= 768;
+    
+    if (esMobile) {
+        // Ajustar tamaños de select para móviles
+        const selects = document.querySelectorAll('#selectCliente, #selectProducto');
+        selects.forEach(select => {
+            select.size = 3;
+        });
+        
+        // Mejorar experiencia táctil
+        agregarEventosTactiles();
+    }
+    
+    // Listener para cambios de orientación
+    window.addEventListener('orientationchange', function() {
+        setTimeout(() => {
+            ajustarVistaMobile();
+        }, 100);
+    });
+    
+    // Listener para redimensionamiento
+    window.addEventListener('resize', function() {
+        ajustarVistaMobile();
+    });
+}
+
+function agregarEventosTactiles() {
+    // Mejorar selección en listas desplegables
+    const selectCliente = document.getElementById('selectCliente');
+    const selectProducto = document.getElementById('selectProducto');
+    
+    if (selectCliente) {
+        selectCliente.addEventListener('touchstart', function(e) {
+            e.stopPropagation();
+        });
+    }
+    
+    if (selectProducto) {
+        selectProducto.addEventListener('touchstart', function(e) {
+            e.stopPropagation();
+        });
+    }
+    
+    // Mejorar botones de acción
+    const botones = document.querySelectorAll('.btn');
+    botones.forEach(btn => {
+        btn.addEventListener('touchstart', function() {
+            this.style.transform = 'scale(0.95)';
+        });
+        
+        btn.addEventListener('touchend', function() {
+            this.style.transform = 'scale(1)';
+        });
+    });
+}
+
+function ajustarVistaMobile() {
+    const esMobile = window.innerWidth <= 768;
+    
+    // Ajustar tablas para móviles
+    const tablas = document.querySelectorAll('.table-responsive');
+    tablas.forEach(tabla => {
+        if (esMobile) {
+            tabla.classList.add('mobile-scroll');
+        } else {
+            tabla.classList.remove('mobile-scroll');
+        }
+    });
+    
+    // Ajustar modales para móviles
+    const modales = document.querySelectorAll('.modal-dialog');
+    modales.forEach(modal => {
+        if (esMobile) {
+            modal.style.margin = '10px';
+            modal.style.maxWidth = 'calc(100% - 20px)';
+        } else {
+            modal.style.margin = '';
+            modal.style.maxWidth = '';
+        }
+    });
+}
+
+// Función para optimizar scroll en móviles
+function optimizarScrollMobile() {
+    if ('scrollBehavior' in document.documentElement.style) {
+        document.documentElement.style.scrollBehavior = 'smooth';
+    }
+}
+
+// Llamar optimización al cargar
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', optimizarScrollMobile);
+} else {
+    optimizarScrollMobile();
 }

@@ -2,41 +2,46 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title><%= title %></title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body>
-    <div class="container mt-4">
-        <h1 class="text-center mb-4">Panel de Administración - Maquila Lima Lab</h1>
-        <p class="text-center text-muted mb-4">RUC 20607583677</p>
+    <div class="container-fluid mt-2">
+        <div class="row">
+            <div class="col-12">
+                <h1 class="text-center mb-2">Panel de Administración</h1>
+                <h2 class="text-center h5 text-primary mb-1">Maquila Lima Lab</h2>
+                <p class="text-center text-muted mb-3 small">RUC 20607583677</p>
+            </div>
+        </div>
         
-        <ul class="nav nav-tabs" id="adminTabs" role="tablist">
+        <ul class="nav nav-tabs justify-content-center" id="adminTabs" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="cotizacion-tab" data-bs-toggle="tab" data-bs-target="#cotizacion" type="button" role="tab">
-                    Nueva Cotización
+                    <i class="fas fa-plus-circle d-none d-md-inline"></i> <span class="d-none d-sm-inline">Nueva </span>Cotización
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="lista-cotizaciones-tab" data-bs-toggle="tab" data-bs-target="#lista-cotizaciones" type="button" role="tab">
-                    Cotizaciones
+                    <i class="fas fa-list d-none d-md-inline"></i> Cotizaciones
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="productos-tab" data-bs-toggle="tab" data-bs-target="#productos" type="button" role="tab">
-                    Productos
+                    <i class="fas fa-box d-none d-md-inline"></i> Productos
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="clientes-tab" data-bs-toggle="tab" data-bs-target="#clientes" type="button" role="tab">
-                    Clientes
+                    <i class="fas fa-users d-none d-md-inline"></i> Clientes
                 </button>
             </li>
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="configuracion-tab" data-bs-toggle="tab" data-bs-target="#configuracion" type="button" role="tab">
-                    Configuración
+                    <i class="fas fa-cog d-none d-md-inline"></i> <span class="d-none d-sm-inline">Config</span><span class="d-sm-none">Cfg</span>
                 </button>
             </li>
         </ul>
@@ -44,60 +49,60 @@
         <div class="tab-content" id="adminTabsContent">
             <!-- Tab Cotización -->
             <div class="tab-pane fade show active" id="cotizacion" role="tabpanel">
-                <div class="row mt-4">
+                <div class="row mt-3">
                     <div class="col-12">
                         <div class="card">
                             <div class="card-header">
-                                <h5>Nueva Cotización</h5>
+                                <h5 class="mb-0"><i class="fas fa-plus-circle"></i> Nueva Cotización</h5>
                             </div>
                             <div class="card-body">
                                 <!-- Selección de Cliente -->
-                                <div class="row mb-4">
-                                    <div class="col-md-6">
-                                        <label class="form-label">Buscar Cliente</label>
+                                <div class="row mb-3">
+                                    <div class="col-lg-6 col-md-12 mb-3">
+                                        <label class="form-label"><i class="fas fa-search"></i> Buscar Cliente</label>
                                         <div class="input-group">
                                             <input type="text" class="form-control" id="buscarClienteCotizacion" placeholder="Buscar por razón social, DNI/RUC...">
                                             <button class="btn btn-outline-secondary" type="button" id="btnLimpiarCliente">
                                                 <i class="fas fa-times"></i>
                                             </button>
                                         </div>
-                                        <select class="form-select mt-2" id="selectCliente" size="5" style="display:none;">
+                                        <select class="form-select mt-2" id="selectCliente" size="4" style="display:none;">
                                         </select>
                                     </div>
-                                    <div class="col-md-6">
+                                    <div class="col-lg-6 col-md-12">
                                         <div id="datosClienteSeleccionado" class="cliente-info" style="display:none;">
-                                            <h6>Cliente Seleccionado:</h6>
+                                            <h6><i class="fas fa-user-check"></i> Cliente Seleccionado:</h6>
                                             <div id="infoCliente"></div>
                                         </div>
                                     </div>
                                 </div>
 
                                 <!-- Agregar Productos -->
-                                <div class="row mb-4">
+                                <div class="row mb-3">
                                     <div class="col-12">
-                                        <h6>Agregar Productos</h6>
-                                        <div class="row">
-                                            <div class="col-md-4">
+                                        <h6><i class="fas fa-box"></i> Agregar Productos</h6>
+                                        <div class="row g-2">
+                                            <div class="col-lg-3 col-md-6 col-12">
                                                 <label class="form-label">Buscar Producto</label>
                                                 <input type="text" class="form-control" id="buscarProductoCotizacion" placeholder="Buscar producto...">
-                                                <select class="form-select mt-2" id="selectProducto" size="4" style="display:none;">
+                                                <select class="form-select mt-2" id="selectProducto" size="3" style="display:none;">
                                                 </select>
                                             </div>
-                                            <div class="col-md-2">
+                                            <div class="col-lg-2 col-md-3 col-6">
                                                 <label class="form-label">Precio</label>
                                                 <input type="number" step="0.01" min="0" class="form-control" id="precioProductoSeleccionado" placeholder="0.00">
                                             </div>
-                                            <div class="col-md-2">
+                                            <div class="col-lg-2 col-md-3 col-6">
                                                 <label class="form-label">Cantidad</label>
                                                 <input type="number" step="0.01" min="0" class="form-control" id="cantidadProducto" placeholder="0.00">
                                             </div>
-                                            <div class="col-md-2">
+                                            <div class="col-lg-2 col-md-6 col-12">
                                                 <label class="form-label">Total</label>
                                                 <input type="text" class="form-control" id="totalProducto" readonly>
                                             </div>
-                                            <div class="col-md-2">
-                                                <label class="form-label">&nbsp;</label>
-                                                <button type="button" class="btn btn-primary d-block w-100" id="btnAgregarItem">
+                                            <div class="col-lg-3 col-md-6 col-12">
+                                                <label class="form-label d-none d-md-block">&nbsp;</label>
+                                                <button type="button" class="btn btn-primary d-block w-100 touch-friendly" id="btnAgregarItem">
                                                     <i class="fas fa-plus"></i> Agregar
                                                 </button>
                                             </div>
@@ -106,19 +111,19 @@
                                 </div>
 
                                 <!-- Lista de Items -->
-                                <div class="row mb-4">
+                                <div class="row mb-3">
                                     <div class="col-12">
-                                        <h6>Items de la Cotización</h6>
-                                        <div class="table-responsive">
+                                        <h6><i class="fas fa-list"></i> Items de la Cotización</h6>
+                                        <div class="table-responsive mobile-scroll">
                                             <table class="table table-bordered table-sm">
                                                 <thead class="table-light">
                                                     <tr>
-                                                        <th style="width: 40%;">Producto</th>
-                                                        <th style="width: 15%; text-align: center;">Precio Unit.</th>
-                                                        <th style="width: 12%; text-align: center;">Cantidad</th>
-                                                        <th style="width: 15%; text-align: center;">Total</th>
-                                                        <th style="width: 15%; text-align: center;">Por Facturar</th>
-                                                        <th style="width: 8%; text-align: center;">Acciones</th>
+                                                        <th style="width: 35%; min-width: 150px;">Producto</th>
+                                                        <th style="width: 15%; text-align: center; min-width: 80px;">Precio Unit.</th>
+                                                        <th style="width: 12%; text-align: center; min-width: 70px;">Cantidad</th>
+                                                        <th style="width: 15%; text-align: center; min-width: 80px;">Total</th>
+                                                        <th style="width: 15%; text-align: center; min-width: 80px;">Por Facturar</th>
+                                                        <th style="width: 8%; text-align: center; min-width: 60px;">Acciones</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody id="itemsCotizacion">
@@ -133,37 +138,37 @@
 
                                 <!-- Totales -->
                                 <div class="row">
-                                    <div class="col-md-6 offset-md-6">
-                                        <div class="card">
+                                    <div class="col-lg-6 offset-lg-6 col-md-8 offset-md-4 col-12">
+                                        <div class="card totales-mobile">
                                             <div class="card-body">
                                                 <div class="row mb-2">
-                                                    <div class="col-6"><strong>Total a Pagar:</strong></div>
-                                                    <div class="col-6 text-end"><strong id="totalAPagar">S/ 0.00</strong></div>
+                                                    <div class="col-7"><strong>Total a Pagar:</strong></div>
+                                                    <div class="col-5 text-end"><strong id="totalAPagar">S/ 0.00</strong></div>
                                                 </div>
                                                 <div class="row mb-2">
-                                                    <div class="col-6"><strong>Por Facturar:</strong></div>
-                                                    <div class="col-6 text-end"><strong id="totalPorFacturar">S/ 0.00</strong></div>
+                                                    <div class="col-7"><strong>Por Facturar:</strong></div>
+                                                    <div class="col-5 text-end"><strong id="totalPorFacturar">S/ 0.00</strong></div>
                                                 </div>
                                                 <div class="row mb-2">
-                                                    <div class="col-6">Abono:</div>
-                                                    <div class="col-6">
+                                                    <div class="col-7">Abono:</div>
+                                                    <div class="col-5">
                                                         <input type="number" step="0.01" min="0" class="form-control form-control-sm" id="abono" placeholder="0.00" value="0">
                                                     </div>
                                                 </div>
                                                 <hr>
-                                                <div class="row">
-                                                    <div class="col-6"><strong>Saldo:</strong></div>
-                                                    <div class="col-6 text-end"><strong id="saldo">S/ 0.00</strong></div>
+                                                <div class="row mb-3">
+                                                    <div class="col-7"><strong>Saldo:</strong></div>
+                                                    <div class="col-5 text-end"><strong id="saldo">S/ 0.00</strong></div>
                                                 </div>
-                                                <div class="mt-3">
-                                                    <button type="button" class="btn btn-success w-100" id="btnGuardarCotizacion">
+                                                <div class="d-grid">
+                                                    <button type="button" class="btn btn-success btn-lg touch-friendly" id="btnGuardarCotizacion">
                                                         <i class="fas fa-save"></i> Guardar Cotización
                                                     </button>
                                                 </div>
                                                 
                                                 <!-- Información Bancaria -->
-                                                <div class="mt-4" id="infoBancaria" style="display:none;">
-                                                    <h6 class="text-primary">Información para Depósito</h6>
+                                                <div class="mt-3" id="infoBancaria" style="display:none;">
+                                                    <h6 class="text-primary"><i class="fas fa-university"></i> Información para Depósito</h6>
                                                     <div id="cuentasBancariasInfo"></div>
                                                 </div>
                                             </div>
@@ -202,18 +207,18 @@
                                     </div>
                                 </div>
                                 
-                                <div class="table-responsive">
-                                    <table class="table table-hover">
+                                <div class="table-responsive mobile-scroll">
+                                    <table class="table table-hover table-sm">
                                         <thead class="table-light">
                                             <tr>
-                                                <th class="text-center">ID</th>
-                                                <th>Cliente</th>
-                                                <th class="text-center">Total</th>
-                                                <th class="text-center">Abono</th>
-                                                <th class="text-center">Saldo</th>
-                                                <th class="text-center">Estado</th>
-                                                <th class="text-center">Fecha</th>
-                                                <th class="text-center">Acciones</th>
+                                                <th class="text-center" style="min-width: 60px;">ID</th>
+                                                <th style="min-width: 150px;">Cliente</th>
+                                                <th class="text-center" style="min-width: 80px;">Total</th>
+                                                <th class="text-center" style="min-width: 70px;">Abono</th>
+                                                <th class="text-center" style="min-width: 70px;">Saldo</th>
+                                                <th class="text-center" style="min-width: 80px;">Estado</th>
+                                                <th class="text-center" style="min-width: 90px;">Fecha</th>
+                                                <th class="text-center" style="min-width: 120px;">Acciones</th>
                                             </tr>
                                         </thead>
                                         <tbody id="tablaCotizaciones">
@@ -399,6 +404,7 @@
                     </div>
                 </div>
             </div>
+        </div>
         </div>
     </div>
 

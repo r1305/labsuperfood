@@ -284,6 +284,28 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
       }, (err, html) => err ? reject(err) : resolve(html));
     });
     
+    // Construir footer HTML con cuentas bancarias
+    let footerHtml = '<div style="width:100%; font-family:Arial,sans-serif; font-size:11px; padding:8px 15px; box-sizing:border-box; border-top:2px solid #007bff; background:white;">';
+    
+    if (cuentasBancarias.length > 0) {
+      footerHtml += '<div style="color:#007bff; font-size:12px; font-weight:bold; margin-bottom:6px; text-transform:uppercase;">Información para Depósito</div>';
+      footerHtml += '<div style="display:flex; gap:8px; flex-wrap:wrap;">';
+      cuentasBancarias.forEach(cuenta => {
+        footerHtml += `
+          <div style="flex:1; min-width:160px; border:1px solid #007bff; border-radius:5px; padding:7px 10px; background:#f0f7ff;">
+            <div style="font-size:12px; font-weight:bold; color:#007bff; margin-bottom:4px;">
+              ${cuenta.banco}
+              <span style="background:#17a2b8; color:white; padding:1px 5px; border-radius:3px; font-size:9px; margin-left:4px;">${cuenta.tipo_cuenta === 'ahorros' ? 'AHORROS' : 'CORRIENTE'}</span>
+            </div>
+            <div style="font-size:11px; margin-bottom:2px;"><span style="color:#666;">Número de Cuenta:</span> <strong>${cuenta.numero_cuenta}</strong></div>
+            ${cuenta.cci ? `<div style="font-size:11px; margin-bottom:2px;"><span style="color:#666;">CCI:</span> <strong>${cuenta.cci}</strong></div>` : ''}
+            <div style="font-size:11px;"><span style="color:#666;">Titular:</span> <strong>${cuenta.titular}</strong></div>
+          </div>`;
+      });
+      footerHtml += '</div>';
+    }
+    footerHtml += '</div>';
+
     console.log('Iniciando Chromium portable...');
     
     // Usar Chromium portable (funciona en cualquier servidor)
@@ -297,11 +319,21 @@ app.get('/cotizaciones/:id/pdf', async (req, res) => {
     const page = await browser.newPage();
     await page.setContent(html, { waitUntil: 'domcontentloaded', timeout: 15000 });
     
+    // Calcular altura del footer dinámicamente
+    const footerHeight = cuentasBancarias.length > 0 ? (cuentasBancarias.length <= 2 ? 45 : 70) : 10;
+    
     const pdf = await page.pdf({
       format: 'A4',
-      margin: { top: '10mm', right: '10mm', bottom: '10mm', left: '10mm' },
+      margin: {
+        top: '10mm',
+        right: '10mm',
+        bottom: `${footerHeight}mm`,
+        left: '10mm'
+      },
       printBackground: true,
-      preferCSSPageSize: true
+      displayHeaderFooter: true,
+      headerTemplate: '<span></span>',
+      footerTemplate: footerHtml
     });
     
     await browser.close();

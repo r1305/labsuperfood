@@ -51,6 +51,9 @@
 [data-theme="dark"] .cliente-info { background: #1e293b; border-color: #334155; }
 [data-theme="dark"] .form-control[readonly] { background: #334155; color: #e2e8f0; border-color: #475569; }
 
+/* Fix centrado botón guardar cotización */
+.btn-lg.touch-friendly { justify-content: center; }
+
 /* Theme toggle button */
 .theme-toggle {
   background: none;

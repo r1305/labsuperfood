@@ -49,6 +49,7 @@
 [data-theme="dark"] .btn-info { background: #0c4a6e; border-color: #075985; color: #e0f2fe; }
 [data-theme="dark"] .modal-footer { background: #1e293b; }
 [data-theme="dark"] .cliente-info { background: #1e293b; border-color: #334155; }
+[data-theme="dark"] .form-control[readonly] { background: #334155; color: #e2e8f0; border-color: #475569; }
 
 /* Theme toggle button */
 .theme-toggle {

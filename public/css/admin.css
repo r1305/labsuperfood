@@ -26,6 +26,47 @@
   --transition:    all .18s ease;
 }
 
+/* ===== DARK MODE ===== */
+[data-theme="dark"] {
+  --primary:       #3b82f6;
+  --primary-dark:  #2563eb;
+  --primary-light: #1e293b;
+  --surface:       #1e293b;
+  --bg:            #0f172a;
+  --border:        #334155;
+  --text:          #e2e8f0;
+  --text-muted:    #94a3b8;
+  --text-light:    #64748b;
+}
+
+[data-theme="dark"] .table thead th { background: #1e293b; }
+[data-theme="dark"] .table-hover tbody tr:hover td { background: #334155; }
+[data-theme="dark"] .table tbody td { border-bottom-color: #334155; }
+[data-theme="dark"] .input-group-text { background: #334155; border-color: #475569; color: #94a3b8; }
+[data-theme="dark"] .btn-secondary { background: #334155; border-color: #475569; color: #e2e8f0; }
+[data-theme="dark"] .btn-warning { background: #78350f; border-color: #92400e; color: #fef3c7; }
+[data-theme="dark"] .btn-danger { background: #7f1d1d; border-color: #991b1b; color: #fee2e2; }
+[data-theme="dark"] .btn-info { background: #0c4a6e; border-color: #075985; color: #e0f2fe; }
+[data-theme="dark"] .modal-footer { background: #1e293b; }
+[data-theme="dark"] .cliente-info { background: #1e293b; border-color: #334155; }
+
+/* Theme toggle button */
+.theme-toggle {
+  background: none;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-muted);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: var(--transition);
+  font-size: 16px;
+}
+.theme-toggle:hover { color: var(--primary); border-color: var(--primary); }
+
 /* ===== BASE ===== */
 *, *::before, *::after { box-sizing: border-box; }
 

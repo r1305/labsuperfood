@@ -1,5 +1,4 @@
 <%
-// Función para formatear moneda peruana en el template
 function formatearMonedaPDF(monto) {
     const numero = parseFloat(monto) || 0;
     return numero.toLocaleString('es-PE', {
@@ -15,6 +14,14 @@ function formatearNumeroPDF(monto) {
     return numero.toLocaleString('es-PE', {
         minimumFractionDigits: 2,
         maximumFractionDigits: 2
+    });
+}
+
+function formatearFechaLimaPDF(fechaStr) {
+    return new Date(fechaStr).toLocaleString('es-PE', {
+        timeZone: 'America/Lima',
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
     });
 }
 %>
@@ -237,6 +244,7 @@ function formatearNumeroPDF(monto) {
                 <div class="info-line"><strong>Distrito:</strong> <%= cotizacion.distrito %></div>
                 <div class="info-line"><strong>Dirección:</strong> <%= cotizacion.direccion %></div>
                 <div class="info-line"><strong>Teléfono:</strong> <%= cotizacion.telefono %></div>
+                <div class="info-line"><strong>Fecha:</strong> <%= formatearFechaLimaPDF(cotizacion.created_at) %></div>
             </div>
         </div>
         

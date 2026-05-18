@@ -1,5 +1,13 @@
 // ===== FUNCIONES DE UTILIDAD =====
 
+function formatearFechaLima(fechaStr) {
+    return new Date(fechaStr).toLocaleString('es-PE', {
+        timeZone: 'America/Lima',
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+    });
+}
+
 // Función para formatear moneda peruana
 function formatearMoneda(monto) {
     const numero = parseFloat(monto) || 0;
@@ -1150,8 +1158,7 @@ function mostrarCotizaciones(cotizaciones) {
                 </span>
             </td>
             <td class="text-center">
-                <small>${new Date(cotizacion.created_at).toLocaleDateString()}</small><br>
-                <small class="text-muted">${new Date(cotizacion.created_at).toLocaleTimeString()}</small>
+                <small>${formatearFechaLima(cotizacion.created_at)}</small>
             </td>
                             <td class="text-center">
                                 <div class="btn-group btn-group-sm">
@@ -1245,7 +1252,7 @@ function mostrarModalDetalle(cotizacion, detalles) {
                                 Tel: ${cotizacion.telefono}</p>
                             </div>
                             <div class="col-md-6">
-                                <p class="mb-1"><small class="text-muted">Fecha:</small> ${new Date(cotizacion.created_at).toLocaleString()}</p>
+                                <p class="mb-1"><small class="text-muted">Fecha:</small> ${formatearFechaLima(cotizacion.created_at)}</p>
                                 <p class="mb-0"><small class="text-muted">Estado:</small> <span class="badge bg-${getEstadoColor(cotizacion.estado)}">${cotizacion.estado.toUpperCase()}</span></p>
                             </div>
                         </div>

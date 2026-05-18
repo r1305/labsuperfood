@@ -157,7 +157,7 @@ app.put('/cotizaciones/:id', async (req, res) => {
 async function getDatosCotizacion(id) {
   const connection = await createConnection();
   const [cotizacion] = await connection.execute(`
-    SELECT c.*, cl.razon_social, cl.dni_ruc, cl.distrito, cl.direccion, cl.telefono,
+    SELECT c.*, cl.razon_social, cl.dni_ruc, cl.distrito, cl.direccion, cl.telefono, cl.correo,
       co.razon_social as company_nombre, co.ruc_dni as company_ruc
     FROM cotizaciones c 
     JOIN clientes cl ON c.cliente_id = cl.id

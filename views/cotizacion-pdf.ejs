@@ -233,6 +233,7 @@ function formatearFechaLimaPDF(fechaStr) {
         <div style="font-size: 12px; color: #666; margin-bottom: 3px;">RUC <%= cotizacion.company_ruc %></div>
         <div class="document-title">COTIZACIÓN</div>
         <div>N° <%= cotizacion.id.toString().padStart(6, '0') %></div>
+        <div style="font-size: 11px; color: #666; margin-top: 4px;"><%= formatearFechaLimaPDF(cotizacion.created_at) %></div>
     </div>
 
     <div class="cotizacion-info">
@@ -244,7 +245,9 @@ function formatearFechaLimaPDF(fechaStr) {
                 <div class="info-line"><strong>Distrito:</strong> <%= cotizacion.distrito %></div>
                 <div class="info-line"><strong>Dirección:</strong> <%= cotizacion.direccion %></div>
                 <div class="info-line"><strong>Teléfono:</strong> <%= cotizacion.telefono %></div>
-                <div class="info-line"><strong>Fecha:</strong> <%= formatearFechaLimaPDF(cotizacion.created_at) %></div>
+                <% if (cotizacion.correo) { %>
+                <div class="info-line"><strong>Correo:</strong> <%= cotizacion.correo %></div>
+                <% } %>
             </div>
         </div>
         

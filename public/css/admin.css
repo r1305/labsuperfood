@@ -198,6 +198,11 @@ body {
   margin-right: 8px;
 }
 
+/* Excluir íconos dentro de botones */
+.btn i { color: inherit !important; }
+.btn-success i { color: white !important; }
+.btn-primary i { color: white !important; }
+
 .card-body { padding: 20px; }
 
 /* ===== BUTTONS ===== */

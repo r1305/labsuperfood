@@ -1067,7 +1067,7 @@ function guardarCotizacion() {
             // Resetear modo edición
             editandoCotizacion = false;
             cotizacionEditandoId = null;
-            document.getElementById('btnGuardarCotizacion').innerHTML = '<i class="fas fa-save"></i> Guardar Cotización';
+            document.getElementById('btnGuardarCotizacion').innerHTML = '<i class="fas fa-floppy-disk"></i> Guardar Cotización';
             
             limpiarCotizacion();
             cargarCotizaciones(); // Actualizar lista
@@ -2206,7 +2206,7 @@ async function editarCotizacion(id) {
             calcularTotalCotizacion();
             
             // Cambiar texto del botón
-            document.getElementById('btnGuardarCotizacion').innerHTML = '<i class="fas fa-save"></i> Actualizar Cotización';
+            document.getElementById('btnGuardarCotizacion').innerHTML = '<i class="fas fa-floppy-disk"></i> Actualizar Cotización';
             
             alert('Cotización cargada para edición');
         } else {

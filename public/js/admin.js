@@ -1245,9 +1245,8 @@ function mostrarModalDetalle(cotizacion, detalles) {
                                 Tel: ${cotizacion.telefono}</p>
                             </div>
                             <div class="col-md-6">
-                                <h6>Información:</h6>
-                                <p>Fecha: ${new Date(cotizacion.created_at).toLocaleString()}<br>
-                                Estado: <span class="badge bg-${getEstadoColor(cotizacion.estado)}">${cotizacion.estado.toUpperCase()}</span></p>
+                                <p class="mb-1"><small class="text-muted">Fecha:</small> ${new Date(cotizacion.created_at).toLocaleString()}</p>
+                                <p class="mb-0"><small class="text-muted">Estado:</small> <span class="badge bg-${getEstadoColor(cotizacion.estado)}">${cotizacion.estado.toUpperCase()}</span></p>
                             </div>
                         </div>
                         
